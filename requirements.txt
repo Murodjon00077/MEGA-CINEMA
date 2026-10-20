@@ -1,0 +1,7 @@
+aiogram>=3.13,<4
+aiosqlite>=0.20
+kurigram>=2.2
+tgcrypto>=1.2.5
+instagrapi>=2.1
+moviepy==1.0.3
+Pillow>=10
