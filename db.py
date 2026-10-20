@@ -177,6 +177,12 @@ CREATE TABLE IF NOT EXISTS trailer_posts(
   at INTEGER NOT NULL,
   PRIMARY KEY(trailer_id, acct)
 );
+CREATE TABLE IF NOT EXISTS promo_sent(
+  kind TEXT NOT NULL,
+  ref INTEGER NOT NULL,
+  at INTEGER NOT NULL,
+  PRIMARY KEY(kind, ref)
+);
 CREATE INDEX IF NOT EXISTS idx_thchat_room ON theatre_chat(room, id);
 CREATE INDEX IF NOT EXISTS idx_views_at ON views(at);
 CREATE INDEX IF NOT EXISTS idx_views_user ON views(user_id, at);
@@ -1528,3 +1534,21 @@ async def trailer_mark(tid: int, acct: str, status: str, info: str = "") -> None
            ON CONFLICT(trailer_id, acct) DO UPDATE SET status=excluded.status, info=excluded.info, at=excluded.at""",
         (tid, acct, status, info[:300], int(time.time())),
     )
+
+
+# ───────────── Kanalga e'lon qilinganlar (qayta yuborilmasin) ─────────────
+async def promo_mark(kind: str, ref: int) -> None:
+    """kind: 'm' (yakka kino/anime/multfilm) | 's' (serial yoki qismli to'plam)."""
+    await _run("INSERT OR IGNORE INTO promo_sent(kind, ref, at) VALUES(?,?,?)", (kind, ref, int(time.time())))
+
+
+async def promo_backlog():
+    """Hali kanalga yuborilmagan, RASMI (muqovasi) bor chiqarilgan kontent: (yakka kinolar, seriallar)."""
+    singles = await _all(
+        """SELECT * FROM movies WHERE status='live' AND series_id IS NULL AND cover_id!=''
+           AND NOT EXISTS(SELECT 1 FROM promo_sent p WHERE p.kind='m' AND p.ref=movies.id) ORDER BY id""")
+    series = await _all(
+        """SELECT * FROM series s WHERE s.cover_id!=''
+           AND EXISTS(SELECT 1 FROM movies e WHERE e.series_id=s.id AND e.status='live')
+           AND NOT EXISTS(SELECT 1 FROM promo_sent p WHERE p.kind='s' AND p.ref=s.id) ORDER BY s.id""")
+    return singles, series

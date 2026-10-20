@@ -1654,7 +1654,8 @@ async def api_admin_trailers(request: web.Request):
         slots.append({"slot": slot, "label": label, "id": cid,
                       "title": (await db.get_setting(key + "_title", "")) if cid else ""})
     return web.json_response({"groups": groups, "slots": slots, "total": await db.trailer_total(),
-                              "running": trailers.running()})
+                              "running": trailers.running(), "backfill": await promo.backfill_count(),
+                              "backfilling": promo.backfilling()})
 
 
 async def api_admin_trailers_run(request: web.Request):
@@ -1674,6 +1675,18 @@ async def api_admin_trailers_run(request: web.Request):
     if not trailers.start(request.app["bot"], accts):
         return _bad("Yuklash allaqachon ketyapti. Tugagach adminlarga hisobot keladi")
     return web.json_response({"ok": True})
+
+
+async def api_admin_promo_backfill(request: web.Request):
+    """Hozirgacha chiqarilgan (rasmi bor) kontentni o'z kanallariga bir marta yuboradi."""
+    _admin(request, "channels")
+    if promo.backfilling():
+        return _bad("Yuborish allaqachon ketyapti. Tugagach adminlarga hisobot keladi")
+    n = await promo.backfill_count()
+    if not n:
+        return _bad("Yuboriladigan narsa yo'q (kanallar ulanmagan yoki hammasi yuborilgan)")
+    broadcast.spawn(promo.backfill(request.app["bot"]))
+    return web.json_response({"ok": True, "count": n})
 
 
 async def api_admin_trailers_channel(request: web.Request):
@@ -1778,6 +1791,7 @@ def make_app(bot) -> web.Application:
     r.add_get("/api/admin/trailers", api_admin_trailers)
     r.add_post("/api/admin/trailers/run", api_admin_trailers_run)
     r.add_post("/api/admin/trailers/channel", api_admin_trailers_channel)
+    r.add_post("/api/admin/promo/backfill", api_admin_promo_backfill)
     r.add_get("/api/admin/vip", api_admin_vip)
     r.add_post("/api/admin/vip/config", api_admin_vip_config)
     r.add_post("/api/admin/vip/grant", api_admin_vip_grant)

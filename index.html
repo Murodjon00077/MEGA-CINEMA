@@ -2077,6 +2077,20 @@ html:not([data-theme]) .top{background:linear-gradient(rgba(8,10,19,.9) 80%,tran
       p.appendChild(row);
     });
     wrap.appendChild(p);
+    const bf = el('div', 'panel');
+    bf.appendChild(el('h3', null, '📢 Eskilarini kanallarga yuborish'));
+    const bn = el('div', 'note', 'Hozirgacha qo\'shilgan kino, serial, anime va multfilmlardan RASMI borlari o\'z kanallariga BIR MARTA yuboriladi (serial — bitta post). Yuborilgani belgilanadi, qayta yuborilmaydi. Yuborilmagani: ' + d.backfill + ' ta.');
+    bn.style.whiteSpace = 'pre-line'; bf.appendChild(bn);
+    const bb = mkBtn('btn main full', '📤 Eskilarini yuborish (' + d.backfill + ')', async () => {
+      if (!await confirmDlg(d.backfill + ' ta post kanallarga yuboriladi (har biri orasida 3 soniya pauza). Davom etasizmi?')) return;
+      haptic('medium');
+      try { await api('/api/admin/promo/backfill', {}); toast('📢 Yuborish boshlandi. Tugagach botga hisobot keladi', 4200); autoSub(autoTrailerSettings); }
+      catch (e) { toast(errMsg(e), 4200); }
+    });
+    if (!d.backfill || d.backfilling) bb.disabled = true;
+    bf.appendChild(bb);
+    if (d.backfilling) bf.appendChild(el('div', 'note', '⏳ Hozir yuborilyapti...'));
+    wrap.appendChild(bf);
     const ig = el('div', 'panel');
     ig.appendChild(el('h3', null, '📸 Instagram akkauntlar'));
     d.groups.forEach(g => ig.appendChild(el('div', 'sm', g.label + ': ' + (g.ready ? '✅ ulangan' : '❌ .env da ' + g.env + '_USER va ' + g.env + '_PASS yo\'q'))));

@@ -51,15 +51,15 @@ def _start_link(bot_username: str, movie, series_id: int | None) -> str:
     return f"https://t.me/{bot_username}?start=c_{code.replace('.', '_')}"
 
 
-def _text(movie, code: str, eps: list[int] | None) -> str:
+def _text(movie, code: str, eps: list[int] | None, head: str | None = None) -> str:
     e = html.escape
     emoji = svc.KIND_EMOJI.get(movie["kind"], "🎬")
     name = svc.KIND_NAME.get(movie["kind"], "kontent")
     if eps:
-        head = f"🆕 <b>Yangi qism{'lar' if len(set(eps)) > 1 else ''} qo'shildi!</b>"
+        head = head or f"🆕 <b>Yangi qism{'lar' if len(set(eps)) > 1 else ''} qo'shildi!</b>"
         title = f"{emoji} <b>{e(movie['title'])}</b> — {_ranges(eps)}-qism"
     else:
-        head = f"🆕 <b>Yangi {name} qo'shildi!</b>"
+        head = head or f"🆕 <b>Yangi {name} qo'shildi!</b>"
         title = f"{emoji} <b>{e(movie['title'])}</b>" + (f" ({e(movie['year'])})" if movie["year"] else "")
     lines = [head, "", title]
     if movie["genre"]:
@@ -102,36 +102,95 @@ async def post_published(bot: Bot, movie_ids: list[int]) -> None:
     sent: dict[str, int] = {}
     problems: list[str] = []
     for slot, p in items:
-        chat = await chat_of(slot)
-        if not chat:
-            continue
-        m, ser, sid = p["movie"], p["series"], p["sid"]
-        code = db.series_code(m["kind"], sid) if sid else db.movie_code(m)
-        photo = ""
-        if ser is not None:
-            photo = ser["cover_id"] or ser["poster_id"] or ""
-        else:
-            photo = m["cover_id"] or m["poster_id"] or ""
-        text = _text(m, code, p["eps"])
-        markup = InlineKeyboardMarkup(inline_keyboard=[[B(text="▶️ Tomosha qilish", url=_start_link(me.username, m, sid))]])
-        try:
-            try:
-                if not photo:
-                    raise ValueError
-                await bot.send_photo(chat, photo, caption=text, reply_markup=markup)
-            except Exception:
-                await bot.send_message(chat, text, reply_markup=markup, disable_web_page_preview=True)
+        err = await _send(bot, me, slot, p["movie"], p["series"], p["sid"], p["eps"])
+        if err is None:
             sent[slot] = sent.get(slot, 0) + 1
-        except Exception as e:
-            logging.warning("Promo %s kanaliga yuborilmadi: %s", slot, e)
-            problem = f"{SLOTS[slot]}: {str(e)[:100]}"
+        elif err:
+            problem = f"{SLOTS[slot]}: {err}"
             if problem not in problems:
                 problems.append(problem)
         await asyncio.sleep(3)  # kanalga: daqiqasiga ~20 ta limit
+    await _report(bot, sent, problems)
 
-    if sent or problems:
-        txt = "📢 <b>Kanallarga e'lon</b>\n\n" + "\n".join(f"{SLOTS[s]}: {n} ta post" for s, n in sent.items())
-        if problems:
-            txt += "\n\n⚠️ " + "\n⚠️ ".join(html.escape(x) for x in problems) + \
-                   "\n(bot kanalda admin va «Xabar yuborish» huquqiga egami?)"
-        await svc.notify_admins(bot, txt)
+
+async def _send(bot: Bot, me, slot: str, m, ser, sid, eps, head: str | None = None) -> str | None:
+    """Bitta postni kanalga yuboradi va belgilaydi. None — yuborildi; '' — kanal ulanmagan; matn — xato."""
+    chat = await chat_of(slot)
+    if not chat:
+        return ""
+    code = db.series_code(m["kind"], sid) if sid else db.movie_code(m)
+    photo = (ser["cover_id"] or ser["poster_id"] or "") if ser is not None else (m["cover_id"] or m["poster_id"] or "")
+    text = _text(m, code, eps, head)
+    markup = InlineKeyboardMarkup(inline_keyboard=[[B(text="▶️ Tomosha qilish", url=_start_link(me.username, m, sid))]])
+    try:
+        try:
+            if not photo:
+                raise ValueError
+            await bot.send_photo(chat, photo, caption=text, reply_markup=markup)
+        except Exception:
+            await bot.send_message(chat, text, reply_markup=markup, disable_web_page_preview=True)
+    except Exception as e:
+        logging.warning("Promo %s kanaliga yuborilmadi: %s", slot, e)
+        return str(e)[:100]
+    await db.promo_mark("s" if sid else "m", sid or m["id"])
+    return None
+
+
+async def _report(bot: Bot, sent: dict, problems: list, title: str = "📢 <b>Kanallarga e'lon</b>") -> None:
+    if not (sent or problems):
+        return
+    txt = title + "\n\n" + "\n".join(f"{SLOTS[s]}: {n} ta post" for s, n in sent.items())
+    if problems:
+        txt += "\n\n⚠️ " + "\n⚠️ ".join(html.escape(x) for x in problems) + \
+               "\n(bot kanalda admin va «Xabar yuborish» huquqiga egami?)"
+    await svc.notify_admins(bot, txt)
+
+
+# ───────────── Eskilarini bir marta yuborish ─────────────
+_backfill_lock = asyncio.Lock()
+
+
+def backfilling() -> bool:
+    return _backfill_lock.locked()
+
+
+async def backfill_count() -> int:
+    """Kanali ulangan bo'limlar bo'yicha, hali yuborilmagan va rasmi bor kontent soni."""
+    singles, series = await db.promo_backlog()
+    have = {sl: bool(await chat_of(sl)) for sl in SLOTS}
+    return (sum(1 for m in singles if have[group_of(m["kind"])])
+            + sum(1 for s in series if have[group_of(s["kind"])]))
+
+
+async def backfill(bot: Bot) -> None:
+    """Hozirgacha chiqarilgan (rasmi bor) kino/serial/anime/multfilmni o'z kanallariga BIR MARTA yuboradi.
+    Yuborilgani belgilanadi — qayta ishga tushirsangiz ham takrorlanmaydi (uzilsa, qolganidan davom etadi)."""
+    if _backfill_lock.locked():
+        return
+    async with _backfill_lock:
+        me = await bot.me()
+        singles, series = await db.promo_backlog()
+        sent: dict[str, int] = {}
+        problems: list[str] = []
+        head = "🍿 <b>Katalogimizda bor!</b>"
+        jobs = [("m", m) for m in singles] + [("s", s) for s in series]
+        stop: set[str] = set()  # xato bergan kanalga qayta urinmaymiz
+        for kind, row in jobs:
+            slot = group_of(row["kind"])
+            if slot in stop or not await chat_of(slot):
+                continue
+            if kind == "m":
+                err = await _send(bot, me, slot, row, None, None, None, head)
+            else:
+                eps = await db.episodes(row["id"])
+                if not eps:
+                    continue
+                err = await _send(bot, me, slot, eps[0], row, row["id"], [e["ep"] or 0 for e in eps], head)
+            if err is None:
+                sent[slot] = sent.get(slot, 0) + 1
+            elif err:
+                problems.append(f"{SLOTS[slot]}: {err}")
+                stop.add(slot)
+                continue
+            await asyncio.sleep(3)
+        await _report(bot, sent, problems, "📢 <b>Eskilari kanallarga yuborildi</b>")
