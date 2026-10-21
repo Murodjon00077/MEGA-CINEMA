@@ -1552,3 +1552,27 @@ async def promo_backlog():
            AND EXISTS(SELECT 1 FROM movies e WHERE e.series_id=s.id AND e.status='live')
            AND NOT EXISTS(SELECT 1 FROM promo_sent p WHERE p.kind='s' AND p.ref=s.id) ORDER BY s.id""")
     return singles, series
+
+
+# ───────────── Bot almashganda fayl raqamlarini yangilash ─────────────
+async def movies_with_source(after_id: int = 0):
+    return await _all("SELECT id, src_chat, src_msg, poster_id FROM movies WHERE src_chat IS NOT NULL AND id>? ORDER BY id",
+                      (after_id,))
+
+
+async def movie_set_file(mid: int, file_id: str, file_type: str, poster_id: str = "") -> None:
+    if poster_id:
+        await _run("UPDATE movies SET file_id=?, file_type=?, poster_id=? WHERE id=?", (file_id, file_type, poster_id, mid))
+    else:
+        await _run("UPDATE movies SET file_id=?, file_type=? WHERE id=?", (file_id, file_type, mid))
+
+
+async def series_ids_with_episodes():
+    rows = await _all("SELECT DISTINCT series_id AS sid FROM movies WHERE series_id IS NOT NULL")
+    return [r["sid"] for r in rows]
+
+
+async def covers_count() -> int:
+    a = (await _one("SELECT COUNT(*) c FROM movies WHERE cover_id!=''"))["c"]
+    b = (await _one("SELECT COUNT(*) c FROM series WHERE cover_id!=''"))["c"]
+    return a + b

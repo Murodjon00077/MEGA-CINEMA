@@ -15,6 +15,7 @@ import backup
 import config
 import db
 import perms
+import refile
 import theatre
 import trailers
 import user_handlers as user
@@ -89,6 +90,7 @@ async def main() -> None:
     dp.message.outer_middleware(TrackMiddleware())
     dp.callback_query.outer_middleware(TrackMiddleware())
     dp.include_router(trailers.router)  # /igcode va treyler kanali: boshqa routerlardan OLDIN turishi shart
+    dp.include_router(refile.router)
     dp.include_router(admin.router)
     dp.include_router(vip_handlers.router)
     dp.include_router(user.router)
