@@ -59,5 +59,5 @@ IG_ACCOUNTS: dict[str, tuple[str, str]] = {
 }
 IG_PROXY: str = os.getenv("IG_PROXY", "").strip()
 IG_DELAY: int = int(os.getenv("IG_DELAY", "90") or 90)  # ketma-ket yuklashlar orasida (soniya)
-IG_AD_CAPTION: str = os.getenv("IG_AD_CAPTION", "Silka bioda 🔗").strip()
+IG_AD_CAPTION: str = os.getenv("IG_AD_CAPTION", "🤖 Bot va kanal — profil bioda 🔗").strip()
 IG_DIR: Path = Path(DB_PATH).parent  # sessiya fayllari shu yerda saqlanadi

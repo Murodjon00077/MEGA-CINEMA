@@ -122,8 +122,22 @@ def running() -> bool:
     return _run_lock.locked()
 
 
+_KIND_LINE = {"s": "🍿 SERIAL", "a": "🎌 ANIME", "m": "🧸 MULTFILM"}
+
+
 def caption_for(row) -> str:
-    return config.IG_AD_CAPTION if row["grp"] == "ad" else row["code"]
+    """Instagram izohi. Kodli treyler: tur + kod + «bot va kanal bioda». Kodsiz (reklama): faqat «bioda»."""
+    if row["grp"] == "ad":
+        return config.IG_AD_CAPTION
+    code = row["code"]
+    kind = _KIND_LINE.get(code[:1], "🎬 KINO")
+    return (
+        f"{kind}\n"
+        f"🔢 Kod: {code}\n"
+        "\n"
+        "🤖 Bot va kanal — profil bioda 🔗\n"
+        "👆 Kodni botga yozing va tomosha qiling!"
+    )
 
 
 async def _restore_sessions(accts: list[str]) -> None:
