@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 from aiogram import Bot, F, Router
+from aiogram.filters import Command, CommandObject
 from aiogram.types import Message
 
 import autoload
@@ -22,6 +23,7 @@ import broadcast
 import config
 import db
 import insta
+import perms
 import services as svc
 
 router = Router()
@@ -124,8 +126,48 @@ def caption_for(row) -> str:
     return config.IG_AD_CAPTION if row["grp"] == "ad" else row["code"]
 
 
+async def _restore_sessions(accts: list[str]) -> None:
+    """Instagram sessiyasi bazada saqlanadi — server qayta ishga tushsa ham qayta tasdiq so'ralmaydi."""
+    for a in accts:
+        path = insta.session_path(a)
+        if not path.exists():
+            data = await db.get_setting(f"ig_session_{a}", "")
+            if data:
+                path.write_text(data, encoding="utf-8")
+
+
+async def _save_sessions(accts: list[str]) -> None:
+    for a in accts:
+        path = insta.session_path(a)
+        if path.exists():
+            await db.set_setting(f"ig_session_{a}", path.read_text(encoding="utf-8"))
+
+
+@router.message(Command("igcode"))
+async def cmd_igcode(m: Message, command: CommandObject):
+    if not (m.from_user and perms.is_staff(m.from_user.id)):
+        return
+    parts = (command.args or "").split()
+    acct = None
+    if len(parts) == 2 and parts[0] in insta.ACCTS:
+        acct, code = parts
+    elif len(parts) == 1:
+        code = parts[0]
+    else:
+        await m.answer("Kodni shunday yozing: <code>/igcode 123456</code>")
+        return
+    used = insta.submit_code(code.strip(), acct)
+    if used:
+        await m.answer(f"✅ Kod qabul qilindi ({insta.LABEL[used]}). Yuklash davom etadi...")
+    else:
+        await m.answer("Hozir kod kutayotgan akkaunt yo'q. Avval Avto → 🎞 Treyler dan «Yuklash» ni bosing.")
+
+
 async def _run(bot: Bot, accts: list[str]) -> None:
     async with _run_lock:
+        loop = asyncio.get_running_loop()
+        insta.set_notifier(lambda text: asyncio.run_coroutine_threadsafe(svc.notify_admins(bot, text), loop))
+        await _restore_sessions(accts)
         lines = []
         tmp = Path(tempfile.mkdtemp(prefix="trailers_"))
         for acct in accts:
@@ -168,6 +210,7 @@ async def _run(bot: Bot, accts: list[str]) -> None:
             if err:
                 line += f"\n   ↳ {html.escape(err)}"
             lines.append(line)
+        await _save_sessions(accts)
         await svc.notify_admins(bot, "📸 <b>Instagram treylerlar</b>\n\n" + "\n".join(lines))
 
 

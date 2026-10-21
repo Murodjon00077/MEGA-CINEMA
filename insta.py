@@ -5,6 +5,7 @@ yuklashlar orasida pauza qo'yiladi va sessiya fayli saqlanadi (har safar qayta l
 """
 import asyncio
 import logging
+import queue
 from pathlib import Path
 
 import config
@@ -25,6 +26,52 @@ def configured(acct: str) -> bool:
 
 _clients: dict = {}
 
+# ───── Instagram «tasdiq kodi» (challenge): kodni admin Telegram orqali yuboradi ─────
+_notifier = None  # callable(str) — adminlarga xabar (boshqa thread'dan chaqiriladi)
+_codes: dict[str, queue.Queue] = {}
+_waiting: list[str] = []
+CODE_WAIT = 300  # soniya
+
+
+def set_notifier(fn) -> None:
+    global _notifier
+    _notifier = fn
+
+
+def waiting() -> list[str]:
+    return list(_waiting)
+
+
+def submit_code(code: str, acct: str | None = None) -> str | None:
+    """Admin yuborgan kodni kutayotgan akkauntga uzatadi. Qaysi akkaunt uchun ekani qaytariladi."""
+    acct = acct or (_waiting[0] if _waiting else None)
+    if not acct or acct not in _waiting:
+        return None
+    _codes.setdefault(acct, queue.Queue()).put(code)
+    return acct
+
+
+def _code_handler(acct: str):
+    def handler(username, choice):
+        q = _codes.setdefault(acct, queue.Queue())
+        while not q.empty():
+            q.get_nowait()
+        _waiting.append(acct)
+        try:
+            if _notifier:
+                _notifier(
+                    f"🔐 <b>{LABEL[acct]}</b> akkaunti (<code>{username}</code>) uchun Instagram tasdiq kodi so'radi.\n\n"
+                    f"Kod <b>{str(choice).split('.')[-1].lower()}</b> orqali yuborildi (emailni / SMS'ni tekshiring).\n"
+                    f"Uni {CODE_WAIT // 60} daqiqa ichida shu yerga yozing:\n<code>/igcode 123456</code>\n\n"
+                    "Instagram ilovasida «Bu men edim» degan bildirishnoma kelsa, uni ham tasdiqlang.")
+            return q.get(timeout=CODE_WAIT)
+        except queue.Empty:
+            return False
+        finally:
+            if acct in _waiting:
+                _waiting.remove(acct)
+    return handler
+
 
 def _login(acct: str):
     try:
@@ -34,6 +81,7 @@ def _login(acct: str):
     user, pw = config.IG_ACCOUNTS[acct]
     session: Path = config.IG_DIR / f"ig_{acct}.json"
     cl = Client()
+    cl.challenge_code_handler = _code_handler(acct)
     if config.IG_PROXY:
         cl.set_proxy(config.IG_PROXY)
     cl.delay_range = [2, 6]
@@ -48,6 +96,7 @@ def _login(acct: str):
             logging.info("IG %s: eski sessiya yaroqsiz (%s), qayta login", acct, e)
             old_uuids = cl.get_settings().get("uuids")
             cl = Client()
+            cl.challenge_code_handler = _code_handler(acct)
             if config.IG_PROXY:
                 cl.set_proxy(config.IG_PROXY)
             cl.delay_range = [2, 6]
@@ -84,3 +133,7 @@ def upload(acct: str, path: str, caption: str) -> str:
 
 async def upload_async(acct: str, path: str, caption: str) -> str:
     return await asyncio.to_thread(upload, acct, path, caption)
+
+
+def session_path(acct: str) -> Path:
+    return config.IG_DIR / f"ig_{acct}.json"
