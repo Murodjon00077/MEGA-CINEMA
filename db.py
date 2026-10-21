@@ -1556,7 +1556,7 @@ async def promo_backlog():
 
 # ───────────── Bot almashganda fayl raqamlarini yangilash ─────────────
 async def movies_with_source(after_id: int = 0):
-    return await _all("SELECT id, src_chat, src_msg, poster_id FROM movies WHERE src_chat IS NOT NULL AND id>? ORDER BY id",
+    return await _all("SELECT id, src_chat, src_msg, poster_id, series_id FROM movies WHERE src_chat IS NOT NULL AND id>? ORDER BY id",
                       (after_id,))
 
 
@@ -1576,3 +1576,37 @@ async def covers_count() -> int:
     a = (await _one("SELECT COUNT(*) c FROM movies WHERE cover_id!=''"))["c"]
     b = (await _one("SELECT COUNT(*) c FROM series WHERE cover_id!=''"))["c"]
     return a + b
+
+
+async def refile_covers():
+    """Muqovasi bor (tekshirilishi kerak) kinolar va seriallar: ([(id, cover_id)], [(id, cover_id)])."""
+    m = await _all("SELECT id, cover_id FROM movies WHERE series_id IS NULL AND cover_id!=''")
+    s = await _all("SELECT id, cover_id FROM series WHERE cover_id!=''")
+    return [(r["id"], r["cover_id"]) for r in m], [(r["id"], r["cover_id"]) for r in s]
+
+
+async def clear_movie_cover(mid: int) -> None:
+    await _run("UPDATE movies SET cover_id='' WHERE id=?", (mid,))
+
+
+async def clear_series_cover(sid: int) -> None:
+    await _run("UPDATE series SET cover_id='' WHERE id=?", (sid,))
+
+
+async def demote_uncovered() -> int:
+    """Muqovasi yo'q chiqarilgan kontentni «Avto» (kutilayotgan) ga qaytaradi. Soni: kino yoki serial nomi bo'yicha."""
+    cond = ("status='live' AND ((series_id IS NULL AND cover_id='') OR "
+            "(series_id IS NOT NULL AND series_id IN (SELECT id FROM series WHERE cover_id='')))")
+    n = (await _one(
+        f"SELECT COUNT(DISTINCT CASE WHEN series_id IS NULL THEN 'm' || id ELSE 's' || series_id END) c FROM movies WHERE {cond}"))["c"]
+    await _run(f"UPDATE movies SET status='pending' WHERE {cond}")
+    return n
+
+
+async def live_title_count() -> int:
+    return (await _one("SELECT COUNT(DISTINCT CASE WHEN series_id IS NULL THEN 'm' || id ELSE 's' || series_id END) c "
+                       "FROM movies WHERE status='live'"))["c"]
+
+
+async def no_source_count() -> int:
+    return (await _one("SELECT COUNT(*) c FROM movies WHERE src_chat IS NULL"))["c"]
