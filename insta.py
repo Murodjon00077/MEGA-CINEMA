@@ -15,6 +15,21 @@ LABEL = {"kino": "🎬 Kino / Serial", "anime": "🎌 Anime", "multfilm": "🧸 
 ENV_NAME = {"kino": "IG_KINO", "anime": "IG_ANIME", "multfilm": "IG_MULT"}
 
 
+def _moviepy_compat() -> None:
+    """instagrapi ba'zi versiyalarda `moviepy.VideoFileClip` ni kutadi, moviepy 1.x esa uni `moviepy.editor` da beradi.
+    Ikkala versiya bilan ishlashi uchun nomlarni moviepy'ga ko'chirib qo'yamiz."""
+    try:
+        import moviepy
+        if hasattr(moviepy, "VideoFileClip"):
+            return
+        import moviepy.editor as ed
+        for n in dir(ed):
+            if not n.startswith("_") and not hasattr(moviepy, n):
+                setattr(moviepy, n, getattr(ed, n))
+    except Exception as e:
+        logging.warning("moviepy moslashtirish: %s", e)
+
+
 class LoginFailed(Exception):
     """Login/parol, 2 bosqichli tasdiq yoki Instagram «challenge» — qayta urinishdan foyda yo'q."""
 
@@ -78,6 +93,7 @@ def _login(acct: str):
         from instagrapi import Client
     except ImportError as e:
         raise LoginFailed("instagrapi o'rnatilmagan (pip install -r requirements.txt)") from e
+    _moviepy_compat()
     user, pw = config.IG_ACCOUNTS[acct]
     session: Path = config.IG_DIR / f"ig_{acct}.json"
     cl = Client()
@@ -116,6 +132,7 @@ def _login(acct: str):
 
 def upload(acct: str, path: str, caption: str) -> str:
     """Sinxron (thread ichida chaqiriladi). Reels'ning media id'sini qaytaradi."""
+    _moviepy_compat()
     cl = _clients.get(acct)
     if cl is None:
         cl = _clients[acct] = _login(acct)
