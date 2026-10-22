@@ -365,7 +365,8 @@ async def api_me(request: web.Request):
         "theatre_ready": theatre.available(),
         "admin": perms.is_staff(user["id"]),
         "contact": _contact_link(),
-        "vip": {"on": vip.ON, "until": await db.vip_until(user["id"]), "bot": (await request.app["bot"].me()).username},
+        "vip": {"on": vip.ON, "until": await db.vip_until(user["id"]), "bot": (await request.app["bot"].me()).username,
+                "plans": await vip.plans()},
         **perms.info(user["id"]),
     })
 

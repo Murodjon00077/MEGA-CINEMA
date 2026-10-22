@@ -592,6 +592,31 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 .hs-badge{position:absolute;top:12px;left:12px;z-index:2;padding:4px 11px;border-radius:99px;background:rgba(var(--a1rgb),.92);color:var(--onacc);font-size:11px;font-weight:800;letter-spacing:.8px}
 .hs-t{font-size:24px}
 .hs-go{padding:9px 20px;font-size:14px}
+
+/* ───── Kategoriya tugmalari hero ostida (yopishqoq) ───── */
+.top{position:static}
+.kbar{position:sticky;top:0;z-index:19;margin:0 -14px 8px;padding:8px 14px 10px;background:linear-gradient(var(--bg) 86%,transparent)}
+.kbar .tabs.kinds{margin:0}
+.hero-s{margin:14px 0 14px}
+/* ───── VIP oynasi ───── */
+.vipbox{padding:4px 18px 10px;text-align:center}
+.vipbox .vcrown{font-size:0;margin-top:2px;filter:drop-shadow(0 0 22px rgba(245,193,90,.55))}
+.vipbox .vcrown .si{width:78px;height:78px;color:#f5c15a}
+.vipbox h2{font-family:"Bebas Neue",Impact,"Arial Narrow",sans-serif;font-weight:400;font-size:46px;letter-spacing:3px;line-height:1;margin:2px 0 8px}
+.vipbox h2 b{font-weight:400;background:linear-gradient(135deg,#ffe29a,#f2a93b);-webkit-background-clip:text;background-clip:text;color:transparent}
+.vipbox .vsub{color:var(--muted);font-size:13.5px;line-height:1.45;margin:0 10px 12px}
+.vipbox .vperks{display:block;margin:16px 0;padding:4px 14px;border-radius:20px;border:1px solid rgba(245,193,90,.55);background:rgba(245,193,90,.06);box-shadow:0 0 28px -8px rgba(245,193,90,.5)}
+.vipbox .vperks div{display:flex;align-items:center;gap:12px;padding:12px 2px;background:none;border:0;border-bottom:1px solid rgba(245,193,90,.16);border-radius:0;font-size:14.5px;font-weight:600;text-align:left}
+.vipbox .vperks div:last-child{border-bottom:0}
+.vipbox .vperks div::before{content:"\2713";flex:none;width:22px;height:22px;border-radius:50%;background:#f5c15a;color:#2b1a00;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
+.vplans{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 16px}
+.vplan{position:relative;padding:18px 4px 14px;border-radius:16px;background:var(--card);border:1px solid var(--line)}
+.vplan b{display:block;font-size:17px}
+.vplan span{display:block;margin-top:4px;color:var(--muted);font-size:12px;font-weight:600}
+.vplan i{display:block;margin-top:5px;font-style:normal;font-size:12px;font-weight:800;color:#ff6b6b}
+.vplan em{position:absolute;top:-10px;left:50%;transform:translateX(-50%);padding:2px 10px;border-radius:99px;background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00;font-style:normal;font-size:10.5px;font-weight:800;white-space:nowrap}
+.vplan.best{border-color:#f5c15a;box-shadow:0 0 20px -6px rgba(245,193,90,.6)}
+.vipbox .btn.vgold{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00;box-shadow:0 8px 22px rgba(240,138,36,.35)}
 </style>
 
 </head>
@@ -610,12 +635,6 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     <button id="clr" hidden aria-label="Tozalash">✕</button>
     <button id="favbtn" type="button" aria-label="Saralangan" aria-pressed="false"><span class="fi"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-star"/></svg></span></button>
   </label>
-  <div class="tabs kinds" id="kinds">
-  <button data-kind="kino"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clap"/></svg>Kino</button>
-  <button data-kind="serial"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tv"/></svg>Serial</button>
-  <button data-kind="multfilm"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-teddy"/></svg>Multfilm</button>
-  <button data-kind="anime"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-torii"/></svg>Anime</button>
-  </div>
   <div class="chips" id="chips"></div>
 </header>
 
@@ -624,6 +643,14 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     <div class="hs-track" id="hsTrack"></div>
     <div class="hs-dots" id="hsDots"></div>
   </section>
+  <div class="kbar">
+  <div class="tabs kinds" id="kinds">
+  <button data-kind="kino"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clap"/></svg>Kino</button>
+  <button data-kind="serial"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tv"/></svg>Serial</button>
+  <button data-kind="multfilm"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-teddy"/></svg>Multfilm</button>
+  <button data-kind="anime"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-torii"/></svg>Anime</button>
+  </div>
+  </div>
   <div class="countrow">
     <div class="count" id="count"></div>
     <div class="sortwrap" id="sortwrap">
@@ -1136,7 +1163,6 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const s = el('div', 'hs');
       const bg = posterBox(m); s.appendChild(bg);
       s.appendChild(el('div', 'hs-shade'));
-      s.appendChild(el('span', 'hs-badge', 'TOP ' + (HERO.slice(0, i).filter(x => !x.ad && !x.slot).length + 1)));
       if (m.lbl && TL[m.lbl]) s.appendChild(tlEl(m.lbl));
       if (m.pay === 'pro' && m.lbl !== 'pro') { const rb = el('span', 'rib pro'); rb.style.top = '9px'; rb.innerHTML = si('crown') + 'PRO'; s.appendChild(rb); }
       const tx = el('div', 'hs-tx');
@@ -1323,14 +1349,14 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   }
 
   /* ═════════════ VIP (foydalanuvchi) ═════════════ */
-  const VIP = { on: false, until: 0, bot: '' };
+  const VIP = { on: false, until: 0, bot: '', plans: [] };
   const ddmmyyyy = ts => { const d = new Date(ts * 1000); return String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear(); };
   function layoutTop() {
     let r = 14;
     ['gear', 'thBtn', 'vipBtn'].forEach(id => { const b = document.getElementById(id); if (b && !b.hidden) { b.style.right = r + 'px'; r += 50; } });
   }
   function applyVip(v) {
-    VIP.on = !!(v && v.on); VIP.until = (v && v.until) || 0; VIP.bot = (v && v.bot) || '';
+    VIP.on = !!(v && v.on); VIP.until = (v && v.until) || 0; VIP.bot = (v && v.bot) || ''; VIP.plans = (v && v.plans) || [];
     $('#vipBtn').hidden = !VIP.on; layoutTop();
   }
   function vipLink() {
@@ -1338,6 +1364,8 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
     setTimeout(() => { try { tg.close(); } catch (e) {} }, 400);
   }
+  const priceTxt = n => String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' so\u2019m';
+  const daysTxt = d => d % 365 === 0 ? (d / 365) + ' yil' : d % 30 === 0 ? (d / 30) + ' oy' : d + ' kun';
   function openVip() {
     haptic();
     const was = sheetOpen; ++sheetGen; sheetOpen = true;
@@ -1345,13 +1373,32 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     const active = VIP.until * 1000 > Date.now();
     const box = el('div', 'vipbox');
     const vcr = el('div', 'vcrown'); vcr.innerHTML = si('crown'); box.appendChild(vcr);
-    box.appendChild(el('h2', null, 'VIP obuna'));
-    box.appendChild(el('div', 'vst' + (active ? ' on' : ''), active ? '✅ Faol: ' + ddmmyyyy(VIP.until) + ' gacha' : 'Hozircha VIP emassiz'));
+    const h = el('h2'); h.innerHTML = '<b>VIP</b> OBUNA'; box.appendChild(h);
+    box.appendChild(el('div', 'vsub', 'Ko\u2019proq imkoniyatlar, yanada ko\u2019proq huzur \u2014 faqat VIP uchun!'));
+    box.appendChild(el('div', 'vst' + (active ? ' on' : ''), active ? '\u2705 Faol: ' + ddmmyyyy(VIP.until) + ' gacha' : 'Hozircha VIP emassiz'));
     const ul = el('div', 'vperks');
-    ['🎬 Barcha pullik kino va seriallar', '🎭 Teatrda o\'z xonangizni ochish', '⭐ Chatda VIP belgisi'].forEach(t => ul.appendChild(el('div', null, t)));
+    ['Barcha pullik kino va seriallar', 'Teatrda o\u2019z xonangizni ochish', 'Chatda VIP belgisi'].forEach(t => ul.appendChild(el('div', null, t)));
     box.appendChild(ul);
-    box.appendChild(mkBtn('btn main', active ? '🔄 Muddatni uzaytirish' : '💎 VIP olish', () => { haptic('medium'); vipLink(); }));
-    box.appendChild(el('div', 'note', 'Tarif va to\'lov usuli (Click, Payme yoki chek) botda tanlanadi.')).style.marginTop = '12px';
+    const plans = (VIP.plans || []).slice(0, 3);
+    if (plans.length) {
+      const base = plans.reduce((a, p) => (p.price / p.days > a.price / a.days ? p : a), plans[0]);
+      const disc = p => Math.round((1 - (p.price / p.days) / (base.price / base.days)) * 100);
+      const bestD = Math.max(...plans.map(disc));
+      const row = el('div', 'vplans');
+      plans.forEach(p => {
+        const d = disc(p), best = bestD >= 5 && d === bestD;
+        const c = el('div', 'vplan' + (best ? ' best' : ''));
+        if (best) c.appendChild(el('em', null, 'Foydali'));
+        c.appendChild(el('b', null, daysTxt(p.days)));
+        c.appendChild(el('span', null, priceTxt(p.price)));
+        if (d >= 5) c.appendChild(el('i', null, '\u2212' + d + '%'));
+        row.appendChild(c);
+      });
+      box.appendChild(row);
+    }
+    const bt = mkBtn('btn main vgold', active ? 'Muddatni uzaytirish' : 'VIP obuna bo\u2019lish', () => { haptic('medium'); vipLink(); });
+    box.appendChild(bt);
+    box.appendChild(el('div', 'note', 'Tarif va to\u2019lov usuli (Click, Payme yoki chek) botda tanlanadi.')).style.marginTop = '12px';
     sheet.appendChild(box);
     sheet.scrollTop = 0; sheet.classList.add('on'); ov.classList.add('on');
     if (!was) { try { tg.BackButton.onClick(closeSheet); tg.BackButton.show(); } catch (e) {} }
