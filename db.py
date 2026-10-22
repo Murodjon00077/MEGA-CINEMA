@@ -1610,3 +1610,12 @@ async def live_title_count() -> int:
 
 async def no_source_count() -> int:
     return (await _one("SELECT COUNT(*) c FROM movies WHERE src_chat IS NULL"))["c"]
+
+
+async def thumb_as_cover() -> tuple[int, int]:
+    """Muqovasi yo'q kontentga video kadri (poster)ni muqova qilib qo'yadi. (kinolar, seriallar) soni."""
+    a = (await _one("SELECT COUNT(*) c FROM movies WHERE series_id IS NULL AND cover_id='' AND poster_id!=''"))["c"]
+    b = (await _one("SELECT COUNT(*) c FROM series WHERE cover_id='' AND poster_id!=''"))["c"]
+    await _run("UPDATE movies SET cover_id=poster_id WHERE series_id IS NULL AND cover_id='' AND poster_id!=''")
+    await _run("UPDATE series SET cover_id=poster_id WHERE cover_id='' AND poster_id!=''")
+    return a, b

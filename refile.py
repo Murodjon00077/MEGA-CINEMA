@@ -181,3 +181,23 @@ async def _job(bot: Bot, admin_chat: int, fresh: bool) -> None:
         if to_avto:
             txt += "\n\n👉 Katalog → ⚙️ Admin → Avto: rasmlarini qo'yib, qayta chiqaring."
         await svc.notify_admins(bot, txt)
+
+
+@router.message(Command("rasm_tikla"))
+async def cmd_cover_fix(m: Message, bot: Bot):
+    """Muqovasi yo'q (Avto dagi) kontentga video kadrini muqova qilib, XABARSIZ qayta chiqaradi."""
+    if not (m.from_user and perms.is_full(m.from_user.id)):
+        return
+    if _lock.locked():
+        await m.answer("⏳ Fayl yangilash ketyapti, tugagach qayta yuboring.")
+        return
+    a, b = await db.thumb_as_cover()
+    ids, left = await db.publish_pending()  # xabarsiz: foydalanuvchilarga ham, kanallarga ham e'lon ketmaydi
+    live = await db.live_title_count()
+    await m.answer(
+        "🖼 <b>Rasmlar tiklandi</b>\n\n"
+        f"Video kadri muqova bo'ldi: {a} ta kino, {b} ta serial\n"
+        f"Katalogga qaytdi: {len(ids)} ta qism/kino (e'lon yuborilmadi)\n"
+        f"📚 Hozir katalogda: {live} ta\n"
+        + (f"📥 Rasmsiz qolgan (Avto da): {left} ta\n" if left else "")
+        + "\nXohlasangiz, istalgan kinoning muqovasini Mini App → tahrirlash orqali chiroyli rasmga almashtirasiz.")
