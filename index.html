@@ -572,6 +572,26 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 .bnav button.on::after{content:"";position:absolute;top:2px;width:18px;height:3px;border-radius:3px;background:var(--grad)}
 .chat-fab{bottom:calc(92px + env(safe-area-inset-bottom))}
 .toast{bottom:calc(98px + env(safe-area-inset-bottom))}
+
+/* ───── Bosh sahifa: yangi ko'rinish ───── */
+.top .brand{justify-content:center;padding-right:0!important;gap:12px}
+.brand img{width:54px;height:54px;border-radius:15px}
+.brand-name{display:flex;flex-direction:column;background:none;-webkit-background-clip:border-box;background-clip:border-box;color:var(--text);text-shadow:none;font-size:30px;line-height:.9;letter-spacing:5px}
+.brand-name b,.brand-name i{font-weight:400;font-style:normal}
+.brand-name i{color:var(--a1);letter-spacing:4px}
+#gear{display:none!important}
+#chips{display:none!important}
+.search{height:52px;border-radius:18px;background:rgba(21,26,43,.86);border-color:#2a3350;margin-top:14px}
+.tabs.kinds{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;overflow:visible}
+.kinds button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;height:58px;padding:0 2px;border-radius:16px;font-size:12px;font-weight:700}
+.kinds button .si{margin:0;width:22px;height:22px}
+.kinds button.on{box-shadow:0 8px 20px -6px rgba(var(--a1rgb),.55)}
+.hero-s{margin:14px 0 18px}
+.hs{aspect-ratio:16/10;border-radius:24px}
+.hs-track{border-radius:24px}
+.hs-badge{position:absolute;top:12px;left:12px;z-index:2;padding:4px 11px;border-radius:99px;background:rgba(var(--a1rgb),.92);color:var(--onacc);font-size:11px;font-weight:800;letter-spacing:.8px}
+.hs-t{font-size:24px}
+.hs-go{padding:9px 20px;font-size:14px}
 </style>
 
 </head>
@@ -580,7 +600,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 <canvas id="fx"></canvas>
 <div id="deco"></div>
 <header class="top">
-  <div class="brand"><span class="logo-wrap" id="logoWrap"><img src="/logo.png" alt="Mega Cinema"></span><span class="brand-name">MEGA CINEMA</span></div>
+  <div class="brand"><span class="logo-wrap" id="logoWrap"><img src="/logo.png" alt="Mega Cinema"></span><span class="brand-name"><b>MEGA</b><i>CINEMA</i></span></div>
   <button class="gear" id="gear" hidden aria-label="Admin panel"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gear"/></svg></button>
   <button class="tbtn" id="thBtn" hidden aria-label="Teatr"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-masks"/></svg></button>
   <button class="tbtn" id="vipBtn" hidden aria-label="VIP"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-crown"/></svg></button>
@@ -591,10 +611,10 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     <button id="favbtn" type="button" aria-label="Saralangan" aria-pressed="false"><span class="fi"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-star"/></svg></span></button>
   </label>
   <div class="tabs kinds" id="kinds">
-    <button data-kind="kino"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clap"/></svg>Kino</button>
-    <button data-kind="multfilm"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-teddy"/></svg>Multfilm</button>
-    <button data-kind="serial"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tv"/></svg>Serial</button>
-    <button data-kind="anime"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-torii"/></svg>Anime</button>
+  <button data-kind="kino"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-clap"/></svg>Kino</button>
+  <button data-kind="serial"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-tv"/></svg>Serial</button>
+  <button data-kind="multfilm"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-teddy"/></svg>Multfilm</button>
+  <button data-kind="anime"><svg class="si " viewBox="0 0 24 24" aria-hidden="true"><use href="#i-torii"/></svg>Anime</button>
   </div>
   <div class="chips" id="chips"></div>
 </header>
@@ -680,6 +700,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   <button type="button" data-go="home" class="on"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg>Bosh sahifa</button>
   <button type="button" data-go="th" id="nvTh" hidden><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-masks"/></svg>Teatr</button>
   <button type="button" data-go="vip" id="nvVip" hidden><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-crown"/></svg>VIP</button>
+  <button type="button" data-go="set" id="nvSet" hidden><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-gear"/></svg>Sozlama</button>
   <button type="button" data-go="prof"><svg class="si" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>Profil</button>
 </nav>
 <div class="toast" id="toast"></div>
@@ -1109,19 +1130,20 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     return s;
   }
   function buildHero(items) {
-    HERO = items || []; hsTrack.replaceChildren(); hsDots.replaceChildren();
+    let nMov = 0; HERO = (items || []).filter(x => (x.ad || x.slot) ? true : (++nMov <= 5)); hsTrack.replaceChildren(); hsDots.replaceChildren();
     HERO.forEach((m, i) => {
       if (m.ad || m.slot) { hsTrack.appendChild(m.ad ? adSlide(m) : slotSlide()); hsDots.appendChild(el('i', i === 0 ? 'on' : '')); return; }
       const s = el('div', 'hs');
       const bg = posterBox(m); s.appendChild(bg);
       s.appendChild(el('div', 'hs-shade'));
+      s.appendChild(el('span', 'hs-badge', 'TOP ' + (HERO.slice(0, i).filter(x => !x.ad && !x.slot).length + 1)));
       if (m.lbl && TL[m.lbl]) s.appendChild(tlEl(m.lbl));
       if (m.pay === 'pro' && m.lbl !== 'pro') { const rb = el('span', 'rib pro'); rb.style.top = '9px'; rb.innerHTML = si('crown') + 'PRO'; s.appendChild(rb); }
       const tx = el('div', 'hs-tx');
       tx.appendChild(el('div', 'hs-t', m.title));
       const meta = [m.year, (m.genre || '').split(',')[0].trim(), m.t === 's' ? m.eps + ' qism' : m.quality].filter(Boolean).join(' · ');
       if (meta) tx.appendChild(el('div', 'hs-m', meta));
-      tx.appendChild(el('span', 'hs-go', '▶ Ko\'rish'));
+      tx.appendChild(el('span', 'hs-go', '▶ Ko\'rishni boshlash'));
       s.appendChild(tx);
       s.onclick = () => { haptic(); openSheet(m); };
       hsTrack.appendChild(s); hsDots.appendChild(el('i', i === 0 ? 'on' : ''));
@@ -3173,9 +3195,9 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   /* ───────── Pastki menyu ───────── */
   {
     const nav = document.getElementById('bnav');
-    const syncNav = () => { $('#nvTh').hidden = $('#thBtn').hidden; $('#nvVip').hidden = $('#vipBtn').hidden; };
+    const syncNav = () => { $('#nvTh').hidden = $('#thBtn').hidden; $('#nvVip').hidden = $('#vipBtn').hidden; $('#nvSet').hidden = $('#gear').hidden; };
     const mo = new MutationObserver(syncNav);
-    ['thBtn', 'vipBtn'].forEach(id => mo.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] }));
+    ['thBtn', 'vipBtn', 'gear'].forEach(id => mo.observe(document.getElementById(id), { attributes: true, attributeFilter: ['hidden'] }));
     syncNav();
     nav.addEventListener('click', e => {
       const b = e.target.closest('button[data-go]'); if (!b) return;
@@ -3184,6 +3206,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       if (go === 'home') window.scrollTo({ top: 0, behavior: 'smooth' });
       else if (go === 'th') thOpen();
       else if (go === 'vip') openVip();
+      else if (go === 'set') $('#gear').click();
       else if (go === 'prof') toast('Profil bo\u2019limi tayyorlanmoqda\u2026');
     });
     // Klaviatura ochilganda menyu yashirinadi (qidiruv paytida joy egallamasin)
