@@ -183,6 +183,22 @@ CREATE TABLE IF NOT EXISTS promo_sent(
   at INTEGER NOT NULL,
   PRIMARY KEY(kind, ref)
 );
+CREATE TABLE IF NOT EXISTS ratings(
+  user_id INTEGER NOT NULL,
+  item INTEGER NOT NULL,
+  stars INTEGER NOT NULL,
+  at INTEGER NOT NULL,
+  PRIMARY KEY(user_id, item)
+);
+CREATE TABLE IF NOT EXISTS comments(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  item INTEGER NOT NULL,
+  user_id INTEGER NOT NULL,
+  name TEXT NOT NULL DEFAULT '',
+  text TEXT NOT NULL,
+  at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_comments_item ON comments(item, id);
 CREATE INDEX IF NOT EXISTS idx_thchat_room ON theatre_chat(room, id);
 CREATE INDEX IF NOT EXISTS idx_views_at ON views(at);
 CREATE INDEX IF NOT EXISTS idx_views_user ON views(user_id, at);
@@ -1619,3 +1635,70 @@ async def thumb_as_cover() -> tuple[int, int]:
     await _run("UPDATE movies SET cover_id=poster_id WHERE series_id IS NULL AND cover_id='' AND poster_id!=''")
     await _run("UPDATE series SET cover_id=poster_id WHERE cover_id='' AND poster_id!=''")
     return a, b
+
+
+# ───────────── Baho (yulduz), izohlar va profil ─────────────
+# item: saralanganlar kaliti — kino uchun musbat id, qismli kontent uchun manfiy (-serial id)
+async def rate_set(uid: int, item: int, stars: int) -> None:
+    await _run(
+        """INSERT INTO ratings(user_id, item, stars, at) VALUES(?,?,?,?)
+           ON CONFLICT(user_id, item) DO UPDATE SET stars=excluded.stars, at=excluded.at""",
+        (uid, item, stars, int(time.time())))
+
+
+async def rate_summary(item: int, uid: int) -> tuple[float, int, int]:
+    """(o'rtacha, baholar soni, foydalanuvchining o'z bahosi)"""
+    r = await _one("SELECT COUNT(*) c, AVG(stars) a FROM ratings WHERE item=?", (item,))
+    mine = await _one("SELECT stars FROM ratings WHERE item=? AND user_id=?", (item, uid))
+    return round(r["a"] or 0, 1), r["c"], (mine["stars"] if mine else 0)
+
+
+async def comment_add(item: int, uid: int, name: str, text: str) -> dict:
+    now = int(time.time())
+    cid = await _run("INSERT INTO comments(item, user_id, name, text, at) VALUES(?,?,?,?,?)", (item, uid, name, text, now))
+    return {"id": cid, "user_id": uid, "name": name, "text": text, "at": now}
+
+
+async def comments_list(item: int, limit: int = 40):
+    return await _all("SELECT * FROM comments WHERE item=? ORDER BY id DESC LIMIT ?", (item, limit))
+
+
+async def comments_total(item: int) -> int:
+    return (await _one("SELECT COUNT(*) c FROM comments WHERE item=?", (item,)))["c"]
+
+
+async def comment_get(cid: int):
+    return await _one("SELECT * FROM comments WHERE id=?", (cid,))
+
+
+async def comment_delete(cid: int) -> None:
+    await _run("DELETE FROM comments WHERE id=?", (cid,))
+
+
+async def comment_last_at(uid: int) -> int:
+    row = await _one("SELECT MAX(at) m FROM comments WHERE user_id=?", (uid,))
+    return (row["m"] or 0) if row else 0
+
+
+async def profile_stats(uid: int) -> dict:
+    f = (await _one("SELECT COUNT(*) c FROM favorites WHERE user_id=?", (uid,)))["c"]
+    v = (await _one("SELECT COUNT(DISTINCT movie_id) c FROM views WHERE user_id=?", (uid,)))["c"]
+    r = (await _one("SELECT COUNT(*) c FROM ratings WHERE user_id=?", (uid,)))["c"]
+    c = (await _one("SELECT COUNT(*) c FROM comments WHERE user_id=?", (uid,)))["c"]
+    return {"favs": f, "views": v, "ratings": r, "comments": c}
+
+
+async def history_items(uid: int, limit: int = 30):
+    """Foydalanuvchi oxirgi ko'rgan kontent (kino yoki butun serial), eng yangisi birinchi."""
+    keys = await _all(
+        """SELECT CASE WHEN m.series_id IS NULL THEN 'm' ELSE 's' END AS t,
+                  COALESCE(m.series_id, m.id) AS id, MAX(v.at) AS last
+           FROM views v JOIN movies m ON m.id = v.movie_id
+           WHERE v.user_id = ? AND m.status = 'live'
+           GROUP BY 1, 2 ORDER BY last DESC LIMIT ?""", (uid, limit))
+    rows = []
+    for k in keys:
+        r = await _one(f"{_CTE}SELECT i.* FROM items i WHERE i.t=? AND i.id=?", (k["t"], k["id"]))
+        if r:
+            rows.append(r)
+    return rows

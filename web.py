@@ -1716,6 +1716,94 @@ async def api_admin_trailers_channel(request: web.Request):
 
 
 
+# ───────────── Baho, izohlar va profil ─────────────
+COMMENT_MAX_LEN = 300
+COMMENT_COOLDOWN = 20  # soniya
+
+
+async def _item_exists(fk: int) -> bool:
+    return bool(await (db.get_series(-fk) if fk < 0 else db.get_movie(fk)))
+
+
+def _user_name(user: dict) -> str:
+    name = " ".join(x for x in (user.get("first_name"), user.get("last_name")) if x).strip()
+    return (name or (f"@{user['username']}" if user.get("username") else "") or "Foydalanuvchi")[:40]
+
+
+async def api_reviews(request: web.Request):
+    user = _auth(request)
+    fk = int(request.query.get("fk", "0") or 0)
+    if not fk or not await _item_exists(fk):
+        raise web.HTTPNotFound(reason="not found")
+    avg, cnt, mine = await db.rate_summary(fk, user["id"])
+    rows = await db.comments_list(fk, 40)
+    vips = await vip.vip_set([r["user_id"] for r in rows])
+    items = [{"id": r["id"], "name": r["name"], "text": r["text"], "at": r["at"],
+              "mine": r["user_id"] == user["id"], "vip": r["user_id"] in vips,
+              "staff": perms.is_staff(r["user_id"])} for r in rows]
+    return web.json_response({"avg": avg, "count": cnt, "mine": mine,
+                              "comments": items, "total": await db.comments_total(fk)})
+
+
+async def api_rate(request: web.Request):
+    user = _auth(request)
+    body = await request.json()
+    fk = int(body.get("fk", 0))
+    stars = int(body.get("stars", 0))
+    if not 1 <= stars <= 5:
+        return _bad("1 dan 5 gacha baho bering")
+    if not fk or not await _item_exists(fk):
+        raise web.HTTPNotFound(reason="not found")
+    await db.rate_set(user["id"], fk, stars)
+    avg, cnt, mine = await db.rate_summary(fk, user["id"])
+    return web.json_response({"avg": avg, "count": cnt, "mine": mine})
+
+
+async def api_comment(request: web.Request):
+    user = _auth(request)
+    if (resp := await _muted_resp(user)) is not None:
+        return resp
+    body = await request.json()
+    fk = int(body.get("fk", 0))
+    text = re.sub(r"[ \t]+", " ", str(body.get("text") or "")).strip()
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    if not text:
+        return _bad("Izoh yozing")
+    if len(text) > COMMENT_MAX_LEN:
+        return _bad(f"Izoh {COMMENT_MAX_LEN} belgidan oshmasligi kerak")
+    if not fk or not await _item_exists(fk):
+        raise web.HTTPNotFound(reason="not found")
+    if not perms.is_staff(user["id"]) and time.time() - await db.comment_last_at(user["id"]) < COMMENT_COOLDOWN:
+        return web.json_response({"error": "Biroz sekinroq yozing 🙂"}, status=429)
+    c = await db.comment_add(fk, user["id"], _user_name(user), text)
+    return web.json_response({"ok": True, "item": {
+        "id": c["id"], "name": c["name"], "text": c["text"], "at": c["at"], "mine": True,
+        "vip": user["id"] in await vip.vip_set([user["id"]]), "staff": perms.is_staff(user["id"])}})
+
+
+async def api_comment_delete(request: web.Request):
+    user = _auth(request)
+    body = await request.json()
+    row = await db.comment_get(int(body.get("id", 0)))
+    if not row:
+        return web.json_response({"ok": True})
+    if row["user_id"] != user["id"] and not perms.is_staff(user["id"]):
+        raise web.HTTPForbidden(reason="forbidden")
+    await db.comment_delete(row["id"])
+    return web.json_response({"ok": True})
+
+
+async def api_profile(request: web.Request):
+    user = _auth(request)
+    uid = user["id"]
+    hist = await db.history_items(uid, 30)
+    return web.json_response({
+        "uid": uid, "name": _user_name(user), "username": user.get("username") or "",
+        "vip_until": await db.vip_until(uid), "staff": perms.is_staff(uid),
+        "stats": await db.profile_stats(uid), "history": [_brief(r) for r in hist]})
+
+
+
 def make_app(bot) -> web.Application:
     app = web.Application(middlewares=[errors, ban_guard, audit_mw], client_max_size=60 * 1024 * 1024)
     app["bot"] = bot
@@ -1760,6 +1848,11 @@ def make_app(bot) -> web.Application:
     r.add_get("/api/admin/punish", api_admin_punish)
     r.add_post("/api/send", api_send)
     r.add_post("/api/fav", api_fav)
+    r.add_get("/api/reviews", api_reviews)
+    r.add_post("/api/rate", api_rate)
+    r.add_post("/api/comment", api_comment)
+    r.add_post("/api/comment/delete", api_comment_delete)
+    r.add_get("/api/profile", api_profile)
     r.add_get(r"/api/poster/{id:\d+}", api_poster)
     # admin
     r.add_get("/api/admin/stats", api_admin_stats)
