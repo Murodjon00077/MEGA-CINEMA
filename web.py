@@ -481,6 +481,20 @@ async def _hero_slides() -> list[dict]:
                 rnd.append(r); have.add(key(r))
     for r in rnd:
         put(r)
+    for b in out:  # slayd uchun: tavsif va davomiylik (katalog kartochkasida bular yo'q)
+        try:
+            if b["t"] == "s":
+                ser = await db.get_series(b["id"])
+                eps = await db.episodes(b["id"])
+                desc, dur = (ser["description"] if ser else ""), (eps[0]["duration"] if eps else 0)
+            else:
+                mv = await db.get_movie(b["id"])
+                desc, dur = (mv["description"] if mv else ""), (mv["duration"] if mv else 0)
+            desc = (desc or "").strip()
+            b["desc"] = desc if len(desc) <= 260 else desc[:259].rstrip() + "…"
+            b["dur"] = int(dur or 0)
+        except Exception:
+            b["desc"], b["dur"] = "", 0
     return out
 
 
