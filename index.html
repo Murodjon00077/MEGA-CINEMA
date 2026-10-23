@@ -680,6 +680,32 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 .pf-hist[hidden]{display:none}
 .pf-vip{border-radius:18px;border:1px solid rgba(245,193,90,.6);background:rgba(245,193,90,.08);box-shadow:0 0 26px -10px rgba(245,193,90,.55)}
 .pf-vip .ic{background:rgba(245,193,90,.18);color:#f5c15a}
+
+/* ───── Kartochka: rasm joyini to'ldiradi (xira fon yo'q) ───── */
+.poster img{object-fit:cover}
+.poster img.bg{display:none}
+/* ───── Kino oynasi: chapda ma'lumot, o'ngda rasm ───── */
+.dtop{display:flex;gap:14px;padding:6px 16px 10px;align-items:flex-start}
+.dinfo{flex:1;min-width:0}
+.dinfo h2{margin:2px 0 6px;font-size:22px;line-height:1.15;letter-spacing:-.3px}
+.dmeta{color:var(--muted);font-size:13px;margin-bottom:10px}
+.dtags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.dinfo .rows{padding:0;font-size:13.5px;line-height:1.75}
+.dposter{width:132px;flex:none;border-radius:16px;box-shadow:0 14px 30px -12px rgba(0,0,0,.8)}
+.qa{grid-template-columns:repeat(4,1fr);padding:4px 16px 8px}
+.qa button{position:relative}
+.qa button.on .si{color:#ffc531}
+.qa .qe{font-size:21px;line-height:22px;height:22px}
+.qa .ql{line-height:1.1}
+.cbadge{position:absolute;top:3px;left:calc(50% + 6px);min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--grad);color:var(--onacc);font-style:normal;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.cbadge[hidden]{display:none}
+.rpanel{margin:0 16px 8px;padding:8px 12px 10px;border-radius:16px;background:var(--card);border:1px solid var(--line);text-align:center}
+.rpanel[hidden],.rv[hidden]{display:none}
+.rpanel .stars{justify-content:center;margin:0}
+.stars button{width:38px;height:38px}
+.stars button .si{width:26px;height:26px}
+.rt-hint{margin-top:2px}
+.sheet .desc{padding-top:4px}
 </style>
 
 </head>
@@ -1361,72 +1387,72 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     const url = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent(m.title + ' \u2014 MEGA CINEMA');
     try { tg.openTelegramLink(url); } catch (e) { window.open(url, '_blank'); }
   }
-  async function loadReviews(fk, rateBox, rv, gen) {
-    try {
-      const d = await api('/api/reviews?fk=' + fk);
-      if (gen !== sheetGen || !sheetOpen) return;
-      renderRate(rateBox, d, fk); renderComments(rv, d, fk);
-    } catch (e) {}
-  }
-  function renderRate(box, d, fk) {
-    box.replaceChildren();
-    const top = el('div', 'rt-top');
-    const big = el('div', 'rt-big'); big.innerHTML = si('starf') + '<b>' + (d.count ? d.avg.toFixed(1) : '\u2014') + '</b>';
-    top.append(big, el('div', 'rt-cnt', d.count ? d.count + ' ta baho' : 'Hali baho yo\u2019q'));
-    box.appendChild(top);
-    const row = el('div', 'stars');
-    for (let i = 1; i <= 5; i++) {
-      const b = el('button', i <= d.mine ? 'on' : ''); b.type = 'button'; b.setAttribute('aria-label', i + ' yulduz'); b.innerHTML = si('starf');
-      b.onclick = async () => {
-        haptic('medium');
-        try { const r = await api('/api/rate', { fk, stars: i }); renderRate(box, r, fk); toast('\u2b50 Bahoyingiz qabul qilindi', 1500); }
-        catch (e) { toast(errMsg(e)); }
-      };
-      row.appendChild(b);
-    }
-    box.appendChild(row);
-    box.appendChild(el('div', 'rt-hint', d.mine ? 'Sizning bahoingiz: ' + d.mine + ' \u2605 (o\u2019zgartirish mumkin)' : 'Yulduzchani bosib baho bering'));
-  }
-  function commentEl(c, fk, list, head) {
+  function commentEl(c, onDel) {
     const d = el('div', 'cm');
-    const av = el('div', 'cm-av', (c.name || '?').trim().charAt(0).toUpperCase()); d.appendChild(av);
+    d.appendChild(el('div', 'cm-av', (c.name || '?').trim().charAt(0).toUpperCase()));
     const bd = el('div', 'cm-bd');
     const nm = el('div', 'cm-nm'); nm.appendChild(el('b', null, c.name));
     if (c.staff) nm.appendChild(el('span', 'adm-b', 'ADMIN')); else if (c.vip) nm.appendChild(el('span', 'adm-b vip', 'VIP'));
     nm.appendChild(el('span', 'cm-t', agoTxt(c.at)));
-    bd.appendChild(nm); bd.appendChild(el('div', 'cm-tx', c.text)); d.appendChild(bd);
+    bd.append(nm, el('div', 'cm-tx', c.text)); d.appendChild(bd);
     if (c.mine || CH.staff) {
       const x = el('button', 'cm-x'); x.type = 'button'; x.setAttribute('aria-label', 'O\u2019chirish'); x.innerHTML = si('close');
       x.onclick = async () => {
-        try { await api('/api/comment/delete', { id: c.id }); d.remove(); const n = list.children.length; head.textContent = '\ud83d\udcac Izohlar' + (n ? ' (' + n + ')' : ''); if (!n) list.appendChild(el('div', 'cm-empty', 'Hozircha izoh yo\u2019q. Birinchi bo\u2019ling!')); }
+        try { await api('/api/comment/delete', { id: c.id }); d.remove(); onDel(); }
         catch (e) { toast(errMsg(e)); }
       };
       d.appendChild(x);
     }
     return d;
   }
-  function renderComments(rv, d, fk) {
-    rv.replaceChildren();
-    const head = el('div', 'sec', '\ud83d\udcac Izohlar' + (d.total ? ' (' + d.total + ')' : ''));
-    rv.appendChild(head);
-    const bar = el('div', 'cm-bar');
-    const ta = el('textarea'); ta.rows = 1; ta.maxLength = 300; ta.placeholder = 'Izoh yozing...';
-    const send = el('button', 'cm-send'); send.type = 'button'; send.setAttribute('aria-label', 'Yuborish'); send.innerHTML = si('send');
-    bar.append(ta, send); rv.appendChild(bar);
-    const list = el('div', 'cm-list'); rv.appendChild(list);
-    if (!d.comments.length) list.appendChild(el('div', 'cm-empty', 'Hozircha izoh yo\u2019q. Birinchi bo\u2019ling!'));
-    d.comments.forEach(c => list.appendChild(commentEl(c, fk, list, head)));
-    send.onclick = async () => {
-      const text = ta.value.trim(); if (!text) { ta.focus(); return; }
-      send.disabled = true;
-      try {
-        const r = await api('/api/comment', { fk, text });
-        list.querySelectorAll('.cm-empty').forEach(n => n.remove());
-        list.prepend(commentEl(r.item, fk, list, head)); ta.value = '';
-        head.textContent = '\ud83d\udcac Izohlar (' + list.children.length + ')'; haptic('medium');
-      } catch (e) { toast(errMsg(e), 3200); }
-      send.disabled = false;
+  /* Baho va izohlar: tugmalar tepada, bosilganda ochiladi. R — tugma/panel elementlari */
+  async function buildReviewUI(fk, R, gen) {
+    let d;
+    try { d = await api('/api/reviews?fk=' + fk); } catch (e) { return; }
+    if (gen !== sheetGen || !sheetOpen) return;
+    const st = { avg: d.avg, count: d.count, mine: d.mine, total: d.total };
+    const paintBtns = () => {
+      R.rateLbl.textContent = st.count ? st.avg.toFixed(1) : 'Baho';
+      R.rateBtn.classList.toggle('on', st.mine > 0);
+      R.cmBadge.textContent = st.total > 99 ? '99+' : String(st.total);
+      R.cmBadge.hidden = !st.total;
     };
+    const paintRate = () => {
+      R.ratePanel.replaceChildren();
+      const row = el('div', 'stars');
+      for (let i = 1; i <= 5; i++) {
+        const b = el('button', i <= st.mine ? 'on' : ''); b.type = 'button'; b.setAttribute('aria-label', i + ' yulduz'); b.innerHTML = si('starf');
+        b.onclick = async () => {
+          haptic('medium');
+          try { const r = await api('/api/rate', { fk, stars: i }); Object.assign(st, { avg: r.avg, count: r.count, mine: r.mine }); paintBtns(); paintRate(); toast('\u2b50 Bahoyingiz qabul qilindi', 1400); }
+          catch (e) { toast(errMsg(e)); }
+        };
+        row.appendChild(b);
+      }
+      R.ratePanel.append(row, el('div', 'rt-hint', (st.count ? st.avg.toFixed(1) + ' \u00b7 ' + st.count + ' ta baho' : 'Hali baho yo\u2019q') + (st.mine ? ' \u00b7 sizniki: ' + st.mine + '\u2605' : '')));
+    };
+    const list = el('div', 'cm-list');
+    const empty = () => { if (!list.children.length) list.appendChild(el('div', 'cm-empty', 'Hozircha izoh yo\u2019q. Birinchi bo\u2019ling!')); };
+    const onDel = () => { st.total = Math.max(0, st.total - 1); paintBtns(); empty(); };
+    const paintCm = () => {
+      const bar = el('div', 'cm-bar');
+      const ta = el('textarea'); ta.rows = 1; ta.maxLength = 300; ta.placeholder = 'Izoh yozing...';
+      const send = el('button', 'cm-send'); send.type = 'button'; send.setAttribute('aria-label', 'Yuborish'); send.innerHTML = si('send');
+      bar.append(ta, send);
+      d.comments.forEach(c => list.appendChild(commentEl(c, onDel))); empty();
+      R.cmPanel.append(bar, list);
+      send.onclick = async () => {
+        const text = ta.value.trim(); if (!text) { ta.focus(); return; }
+        send.disabled = true;
+        try {
+          const r = await api('/api/comment', { fk, text });
+          list.querySelectorAll('.cm-empty').forEach(n => n.remove());
+          list.prepend(commentEl(r.item, onDel)); ta.value = ''; st.total++; paintBtns(); haptic('medium');
+        } catch (e) { toast(errMsg(e), 3200); }
+        send.disabled = false;
+      };
+    };
+    paintBtns(); paintRate(); paintCm();
   }
 
   /* ═════════════ Profil ═════════════ */
@@ -1492,43 +1518,68 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 
   function renderSheet(m) {
     const isS = m.t === 's';
+    const fk = m.fk != null ? m.fk : m.id;
     sheet.replaceChildren(el('div', 'grab'));
-    sheet.appendChild(coverBanner(m));
-    const hero = el('div', 'hero');
-    const info = el('div', 'info');
-    info.appendChild(el('h2', null, m.title));
-    if (isS || m.kind !== 'kino') info.appendChild(el('span', 'tag', KIND_LABEL[m.kind] || m.kind));
-    if (m.pay === 'pro') { const tg1 = el('span', 'tag pro'); tg1.innerHTML = si('crown') + 'PRO'; info.appendChild(tg1); }
-    else if (m.pay === 'free') info.appendChild(el('span', 'tag free', 'FREE'));
-    if (isS && m.pay === 'pro') { const nf = m.eps.filter(e => !e.pro).length; if (nf) info.appendChild(el('span', 'tag free', '🎁 ' + nf + ' qism tekin')); }
-    [m.year, m.quality, m.language].filter(Boolean).forEach(t => info.appendChild(el('span', 'tag', t)));
-    (m.genre || '').split(',').map(x => x.trim()).filter(Boolean).forEach(g => info.appendChild(el('span', 'tag', '🎭 ' + g)));
-    hero.appendChild(info); sheet.appendChild(hero);
-    const rateBox = el('div', 'ratebox'); sheet.appendChild(rateBox);
 
+    /* Yuqori blok: chapda ma'lumot, o'ngda rasm */
+    const top = el('div', 'dtop');
+    const info = el('div', 'dinfo');
+    info.appendChild(el('h2', null, m.title));
+    const meta = [m.year, m.quality, m.language].filter(Boolean).join(' \u00b7 ');
+    if (meta) info.appendChild(el('div', 'dmeta', meta));
+    const tags = el('div', 'dtags');
+    if (isS || m.kind !== 'kino') tags.appendChild(el('span', 'tag', KIND_LABEL[m.kind] || m.kind));
+    if (m.pay === 'pro') { const tg1 = el('span', 'tag pro'); tg1.innerHTML = si('crown') + 'PRO'; tags.appendChild(tg1); }
+    else if (m.pay === 'free') tags.appendChild(el('span', 'tag free', 'FREE'));
+    if (isS && m.pay === 'pro') { const nf = m.eps.filter(e => !e.pro).length; if (nf) tags.appendChild(el('span', 'tag free', '\ud83c\udf81 ' + nf + ' qism tekin')); }
+    (m.genre || '').split(',').map(x => x.trim()).filter(Boolean).forEach(g => tags.appendChild(el('span', 'tag', g)));
+    info.appendChild(tags);
     const rows = el('div', 'rows');
     const add = (k, v) => { if (!v) return; const d = el('div'); d.appendChild(document.createTextNode(k + ' ')); d.appendChild(el('b', null, v)); rows.appendChild(d); };
-    add('🌍 Davlat:', m.country); add('👁 Ko\'rishlar:', String(m.views)); add('🔢 Kod:', String(m.code || m.id));
-    if (isS) add('🎞 Qismlar:', String(m.eps.length));
-    sheet.appendChild(rows);
+    add('\ud83c\udf0d Davlat:', m.country); add('\ud83d\udc41 Ko\u2019rishlar:', String(m.views)); add('\ud83d\udd22 Kod:', String(m.code || m.id));
+    if (isS) add('\ud83c\udf9e Qismlar:', String(m.eps.length));
+    info.appendChild(rows);
+    const pb = posterBox(m); pb.classList.add('dposter');
+    top.append(info, pb); sheet.appendChild(top);
+
+    /* Rasm ostida: Ulashish · Baho · Izoh · Layk */
+    const qa = el('div', 'qa');
+    const qb = (html, label, fn) => { const b = el('button'); b.type = 'button'; b.innerHTML = html + '<span class="ql">' + label + '</span>'; b.onclick = () => { haptic(); fn(b); }; return b; };
+    const ratePanel = el('div', 'rpanel'); ratePanel.hidden = true;
+    const cmPanel = el('div', 'rv'); cmPanel.hidden = true;
+    const shareB = qb(si('send'), 'Ulashish', () => shareItem(m));
+    const rateB = qb(si('starf'), 'Baho', () => { ratePanel.hidden = !ratePanel.hidden; });
+    const rateLbl = rateB.querySelector('.ql');
+    const cmB = qb(si('chat'), 'Izoh', () => { cmPanel.hidden = !cmPanel.hidden; if (!cmPanel.hidden) { const t = cmPanel.querySelector('textarea'); if (t) t.focus(); } });
+    const cmBadge = el('em', 'cbadge', '0'); cmBadge.hidden = true; cmB.appendChild(cmBadge);
+    const likeB = qb('<span class="qe">' + (S.favs.has(fk) ? '\u2764\ufe0f' : '\ud83e\udd0d') + '</span>', 'Layk', async () => {
+      try {
+        const r = await api('/api/fav', { id: fk });
+        if (r.fav) S.favs.add(fk); else S.favs.delete(fk);
+        likeB.querySelector('.qe').textContent = r.fav ? '\u2764\ufe0f' : '\ud83e\udd0d';
+        S.favChanged = true;
+        toast(r.fav ? '\u2b50 Saralanganlarga qo\u2019shildi' : 'Saralanganlardan olib tashlandi', 1600);
+      } catch (e) { toast('Xatolik, qayta urinib ko\u2019ring'); }
+    });
+    qa.append(shareB, rateB, cmB, likeB);
+    sheet.append(qa, ratePanel, cmPanel);
+    buildReviewUI(fk, { rateBtn: rateB, rateLbl, cmBadge, ratePanel, cmPanel }, sheetGen);
+
     if (m.description) sheet.appendChild(el('div', 'desc', m.description));
 
-    const fk = m.fk != null ? m.fk : m.id;
-    const acts = el('div', 'acts');
-    const fav = el('button', 'btn fav', S.favs.has(fk) ? '❤️' : '🤍');
     if (isS) {
       const seen = new Set(m.seen || []);
       const live = m.eps.filter(e => e.live);
       const li = m.last ? live.findIndex(e => e.id === m.last) : -1;
       if (li >= 0) {
         const nx = live[li + 1], tgt = nx || live[li];
-        const label = nx ? '▶ ' + nx.ep + '-qismdan davom etish' : '🔁 ' + tgt.ep + '-qismni qayta ko\'rish';
+        const label = nx ? '\u25b6 ' + nx.ep + '-qismdan davom etish' : '\ud83d\udd01 ' + tgt.ep + '-qismni qayta ko\u2019rish';
         const ca = el('div', 'acts'); ca.style.paddingTop = '12px';
         const cb = el('button', 'btn main', label);
         cb.onclick = () => sendToBot(tgt.id, cb, label);
         ca.appendChild(cb); sheet.appendChild(ca);
       }
-      sheet.appendChild(el('div', 'sec', 'Qismni tanlang 👇'));
+      sheet.appendChild(el('div', 'sec', 'Qismni tanlang \ud83d\udc47'));
       const g = el('div', 'epgrid');
       m.eps.forEach(e => {
         const b = el('button', 'epb' + (e.live ? '' : ' pend') + (e.pro ? ' pro' : '') + (seen.has(e.id) ? ' seen' : '') + (e.id === m.last ? ' last' : ''), String(e.ep));
@@ -1537,32 +1588,12 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         g.appendChild(b);
       });
       sheet.appendChild(g);
-      fav.style.width = '100%'; acts.appendChild(fav);
     } else {
-      const watch = el('button', 'btn main', '▶ Botda ko\'rish');
-      watch.onclick = () => sendToBot(m.id, watch, '▶ Botda ko\'rish');
-      acts.append(watch, fav);
+      const acts = el('div', 'acts');
+      const watch = el('button', 'btn main', '\u25b6 Botda ko\u2019rish');
+      watch.onclick = () => sendToBot(m.id, watch, '\u25b6 Botda ko\u2019rish');
+      acts.appendChild(watch); sheet.appendChild(acts);
     }
-    sheet.appendChild(acts);
-    const rv = el('div', 'rv');
-    const qa = el('div', 'qa');
-    const qb = (icon, label, fn) => { const b = el('button'); b.type = 'button'; b.innerHTML = si(icon) + '<span>' + label + '</span>'; b.onclick = () => { haptic(); fn(); }; return b; };
-    qa.append(qb('send', 'Ulashish', () => shareItem(m)),
-      qb('chat', 'Izohlar', () => rv.scrollIntoView({ behavior: 'smooth', block: 'start' })),
-      qb('starf', 'Baho', () => rateBox.scrollIntoView({ behavior: 'smooth', block: 'center' })));
-    sheet.appendChild(qa); sheet.appendChild(rv);
-    loadReviews(fk, rateBox, rv, sheetGen);
-
-    fav.onclick = async () => {
-      haptic();
-      try {
-        const r = await api('/api/fav', { id: fk });
-        if (r.fav) S.favs.add(fk); else S.favs.delete(fk);
-        fav.textContent = r.fav ? '❤️' : '🤍';
-        S.favChanged = true;
-        toast(r.fav ? '⭐ Saralanganlarga qo\'shildi' : 'Saralanganlardan olib tashlandi', 1600);
-      } catch (e) { toast('Xatolik, qayta urinib ko\'ring'); }
-    };
   }
 
   /* ═════════════ VIP (foydalanuvchi) ═════════════ */
