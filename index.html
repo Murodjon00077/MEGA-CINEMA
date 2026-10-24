@@ -3207,6 +3207,9 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   const thArt = (m, id) => ({ t: m && m.art ? m.art.t : 'm', id: m && m.art ? m.art.id : (id || (m && m.id) || 0), cv: m && m.art ? m.art.cv : '' });
   const thPoster = (m, id) => posterBox(thArt(m, id));
   const thTag = t => (TAGS[t] || '').replace(/^\S+\s/, '');
+  /* Vaqtlar serverda O'zbekiston vaqti bilan tuziladi; ekranda har kim o'z qurilmasidagi vaqt zonasida ko'radi */
+  const thDay = ts => { const d = new Date(ts * 1000), n = new Date(); return d.toDateString() === n.toDateString() ? 'bugun' : d.toDateString() === new Date(n.getTime() + 864e5).toDateString() ? 'ertaga' : d.toLocaleDateString('uz', { day: 'numeric', month: 'short' }); };
+  const thRange = p => p && p.items && p.items.length ? hhmm(p.items[0].start) + ' – ' + hhmm(p.items[p.items.length - 1].end) : '';
   const thClock = (to, srv) => { const left = to - srv; return left > 0 ? thCount(left) : '0:00'; };
 
   function thModal(title, onClose) {
@@ -3345,7 +3348,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       if (tg0) meta.appendChild(el('span', 't2-tag' + (tg0 === 'premiere' ? ' pr' : ''), thTag(tg0) || TAGS[tg0]));
       if (mv.year) meta.appendChild(el('span', '', mv.year));
       const vw = el('span', '', '');
-      if (live) { vw.textContent = '👁 ' + st.viewers + ' tomoshabin'; meta.appendChild(vw); } else { const cd = el('span', ''); meta.appendChild(el('span', '', (nx.time) + ' da')); meta.appendChild(cd); tickFns.push(() => { cd.textContent = '· ' + thClock(nx.start, srv()) + ' qoldi'; }); }
+      if (live) { vw.textContent = '👁 ' + st.viewers + ' tomoshabin'; meta.appendChild(vw); } else { const cd = el('span', ''); meta.appendChild(el('span', '', hhmm(nx.start) + ' da')); meta.appendChild(cd); tickFns.push(() => { cd.textContent = '· ' + thClock(nx.start, srv()) + ' qoldi'; }); }
       tx.appendChild(meta); inn.append(pw, tx); c.appendChild(inn);
       const ft = el('div', 't2-hero-ft');
       if (live && mv.duration) {
@@ -3355,8 +3358,8 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const row = el('div', 't2-ft-row');
       row.appendChild(mkBtn('t2-cta', live ? '▶ Qo\'shilish' : '🚪 Zalga kirish', enter));
       const g = el('div', 'grow'); row.appendChild(g);
-      if (live && st.next && st.next.movie) g.textContent = 'Keyingi: ' + st.next.time + ' · ' + thName(st.next.movie);
-      else if (!live) g.textContent = st.phase === 'closed' ? '08:00 dan 24:00 gacha ochiq' : 'Tanaffus tugagach boshlanadi';
+      if (live && st.next && st.next.movie) g.textContent = 'Keyingi: ' + hhmm(st.next.start) + ' · ' + thName(st.next.movie);
+      else if (!live) g.textContent = st.phase === 'closed' ? 'Ochiq: ' + thRange(d.plan) + ' (sizning vaqtingizda)' : 'Tanaffus tugagach boshlanadi';
       if (!live && nx) { const it = d.plan.items.find(i => i.start === nx.start && i.state === 'next' && i.movie); if (it) row.appendChild(thBell(it)); }
       ft.appendChild(row); c.appendChild(ft);
       function enter() { haptic('medium'); thGo('Ommaviy teatr', thHallPub, true); }
@@ -3366,7 +3369,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const g = el('div', 't2-sched');
       d.plan.items.forEach((i, k) => {
         const r = el('div', 't2-row t2-in ' + i.state); r.style.animationDelay = Math.min(k, 8) * 35 + 'ms';
-        r.appendChild(el('div', 'tm', i.time));
+        r.appendChild(el('div', 'tm', hhmm(i.start)));
         const th = el('div', 'th2'); if (i.movie) th.appendChild(thPoster(i.movie)); r.appendChild(th);
         const tx = el('div', 'tx'); tx.appendChild(el('b', '', i.movie ? thName(i.movie) : '— reja yo\'q —'));
         tx.appendChild(el('span', '', i.movie ? (TAGS[i.tag] || '') : '')); r.appendChild(tx);
@@ -3382,7 +3385,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const m = thModal('Premyera');
       const det = el('div', 't2-det'), pc = el('div', 'pc'); pc.appendChild(thPoster({ art: p.art, id: p.id })); det.appendChild(pc);
       const t = el('div'); t.appendChild(el('h4', '', p.title));
-      const mt = el('div', 't2-meta'); mt.appendChild(el('span', 't2-tag pr', '⭐ ' + p.day.toUpperCase() + ' · ' + p.time));
+      const mt = el('div', 't2-meta'); mt.appendChild(el('span', 't2-tag pr', '⭐ ' + thDay(p.start).toUpperCase() + ' · ' + hhmm(p.start)));
       [p.year, p.quality, p.country].filter(Boolean).forEach(x => mt.appendChild(el('span', 't2-tag', x)));
       if (p.duration) mt.appendChild(el('span', 't2-tag', Math.round(p.duration / 60) + ' daq'));
       t.appendChild(mt); if (p.genre) t.appendChild(el('p', '', p.genre)); if (p.desc) t.appendChild(el('p', '', p.desc));
@@ -3395,7 +3398,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       d.premieres.forEach(p => {
         const c = el('button', 't2-pc t2-in'), im = el('div', 't2-pc-img'); im.appendChild(thPoster({ art: p.art, id: p.id }));
         im.appendChild(el('span', 't2-pc-star', '⭐ PREMYERA'));
-        const w = el('div', 't2-pc-when'); w.appendChild(el('small', '', p.day.toUpperCase())); w.appendChild(document.createTextNode(p.time)); im.appendChild(w); c.appendChild(im);
+        const w = el('div', 't2-pc-when'); w.appendChild(el('small', '', thDay(p.start).toUpperCase())); w.appendChild(document.createTextNode(hhmm(p.start))); im.appendChild(w); c.appendChild(im);
         const bd = el('div', 't2-pc-bd'); bd.appendChild(el('b', '', p.title)); bd.appendChild(el('span', '', [p.year, p.genre].filter(Boolean).join(' · ') || ' ')); bd.appendChild(thBell(p)); c.appendChild(bd);
         c.onclick = () => { haptic(); premiereModal(p); }; sc.appendChild(c);
       });
@@ -3426,7 +3429,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     function render() {
       const d = S.d; tickFns = []; S.off = d.state.now - Date.now() / 1000;
       wrap.replaceChildren(); wrap.appendChild(hero(d));
-      sec('Bugungi efir jadvali', '08:00 – 24:00', schedule(d));
+      sec('Bugungi efir jadvali', thRange(d.plan), schedule(d));
       if (d.premieres.length) sec('Premyeralar', 'Tez orada', premieres(d));
       sec('Shaxsiy xonalar', d.rooms.length ? d.rooms.length + ' ta ochiq' : '', rooms(d));
       if (ME && ME.admin && can('publish')) {
@@ -3456,7 +3459,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const d = await api('/api/theatre/plan'); m.box.lastChild.remove();
       if (!d.items.some(i => i.movie)) m.box.appendChild(el('div', 'note', 'Reja hali tuzilmagan yoki kinolar yetarli emas.'));
       d.items.forEach(i => {
-        const r = el('div', 'pl ' + i.state); r.appendChild(el('div', 'tm', i.time));
+        const r = el('div', 'pl ' + i.state); r.appendChild(el('div', 'tm', hhmm(i.start)));
         const tx = el('div', 'tx');
         tx.appendChild(el('b', '', i.movie ? thName(i.movie) : '— reja yo\'q —'));
         tx.appendChild(el('span', '', i.movie ? (TAGS[i.tag] || '') : ''));
@@ -3751,15 +3754,15 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         H.offset = st.now - Date.now() / 1000; setViewers(st.viewers);
         if (st.phase === 'live') {
           H.startTs = st.start; H.info = st.movie; head(st.movie, st.slot.tag);
-          sm.textContent = st.next && st.next.movie ? 'Keyingi: ' + st.next.time + ' · ' + thName(st.next.movie) + (st.prep != null ? (st.prep >= 100 ? ' · ✅ tayyor' : ' · ⏳ ' + st.prep + '%') : '') : (st.last ? 'Bugungi oxirgi kino' : '');
+          sm.textContent = st.next && st.next.movie ? 'Keyingi: ' + hhmm(st.next.start) + ' · ' + thName(st.next.movie) + (st.prep != null ? (st.prep >= 100 ? ' · ✅ tayyor' : ' · ⏳ ' + st.prep + '%') : '') : (st.last ? 'Bugungi oxirgi kino' : '');
           if (H.mid !== st.movie.id || H.slotKey !== st.key) { stopVideo(); H.mid = st.movie.id; H.slotKey = st.key; loadVideo(st.movie.id); setOv(H.started ? 'wait' : 'start', H.started ? 'Keyingi kino yuklanmoqda...' : undefined); }
           if (!H.started) { if (ov.hidden) setOv('start'); } else { if (!ov.hidden && !H.cd && H.ovKind !== 'wait') setOv(null); sync(); }
         } else {
           stopVideo(); H.info = null; nm.textContent = '';
           const n = st.next && st.next.movie ? st.next : null;
-          if (st.phase === 'closed') { sm.textContent = '🌙 Teatr ' + st.opens_time + ' da ochiladi'; setOv('closed', { to: st.opens, title: n ? thName(n.movie) : '', time: n ? n.time : '', prep: st.prep }); }
+          if (st.phase === 'closed') { sm.textContent = '🌙 Teatr ' + hhmm(st.opens) + ' da ochiladi'; setOv('closed', { to: st.opens, title: n ? thName(n.movie) : '', time: n ? hhmm(n.start) : '', prep: st.prep }); }
           else if (!st.slot.movie && !n) { sm.textContent = ''; setOv('empty'); }
-          else { sm.textContent = ''; setOv('break', { to: st.next ? st.next.start : st.end, title: n ? thName(n.movie) : '', time: n ? n.time : '', prep: st.prep }); }
+          else { sm.textContent = ''; setOv('break', { to: st.next ? st.next.start : st.end, title: n ? thName(n.movie) : '', time: n ? hhmm(n.start) : '', prep: st.prep }); }
         }
         /* Keyingi seans chegarasida qayta tekshiramiz (tasodifiy kechikish bilan — server bir vaqtda ko'p so'rov olmasin) */
         const to = st.phase === 'closed' ? st.opens : st.end;
@@ -3961,7 +3964,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     body.appendChild(el('div', 'note', '⏳ Yuklanmoqda...')); let d;
     try { d = await api('/api/admin/theatre'); } catch (e) { body.replaceChildren(el('div', 'note', errMsg(e))); return; }
     body.replaceChildren();
-    const intro = el('div', 'note', 'Premyera ertaga (' + d.day + ') tanlangan vaqtda teatrda chiqadi. Tugagandan keyin kino katalogga qo\'shiladi — shu paytgacha katalogda ko\'rinmaydi.');
+    const intro = el('div', 'note', 'Vaqtlar O\'zbekiston (Toshkent) vaqtida. Premyera ertaga (' + d.day + ') tanlangan vaqtda teatrda chiqadi. Tugagandan keyin kino katalogga qo\'shiladi — shu paytgacha katalogda ko\'rinmaydi.');
     intro.style.margin = '10px 2px'; body.appendChild(intro);
     if (d.scheduled.length) {
       body.appendChild(el('label', 'lbl', 'Rejalashtirilgan'));

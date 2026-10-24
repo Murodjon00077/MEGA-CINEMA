@@ -760,7 +760,7 @@ async def _send_reminders(bot) -> None:
         left = ts - time.time()
         when = "hozir boshlandi" if left <= 30 else f"{max(1, round(left / 60))} daqiqadan keyin boshlanadi"
         head = "⭐ <b>Premyera</b>" if r["kind"] == "premiere" else "🎬 <b>Seans</b>"
-        text = f"{head} {when}!\n\n<b>{html.escape(title)}</b>\n🕒 {hhmm(ts)}\n\nBirga tomosha qilamiz 🍿"
+        text = f"{head} {when}!\n\n<b>{html.escape(title)}</b>\n🕒 {hhmm(ts)} (Toshkent vaqti)\n\nBirga tomosha qilamiz 🍿"
         try:
             await bot.send_message(uid, text, reply_markup=_remind_kb(ts))
         except TelegramRetryAfter as e:
