@@ -90,3 +90,10 @@ Izoh bo'sh bo'lsa — reklama: uchala akkauntga «Silka bioda» izohi bilan yukl
 Akkauntlar `.env` da (`IG_KINO_*`, `IG_ANIME_*`, `IG_MULT_*`). Avto → 🎞 Treyler bo'limida har bo'lim bo'yicha nechta kutayotgani ko'rinadi:
 bo'lim yoki «Hammasini yuklash» tugmasi bilan yuklanadi, natija botga hisobot bo'lib keladi.
 Eslatma: treyler Telegram orqali 20 MB gacha yuklab olinadi; serverda `ffmpeg` (moviepy bilan keladi) kerak bo'ladi.
+
+## 🎭 Teatr (v48 yangilanishi)
+- **Yangi dizayn**: «Hozir efirda» kartasi, bugungi jadval (hozirgi seans ajratilgan), premyeralar, shaxsiy xonalar, yangi xona oynasi, zal (video + reaksiya + chat + ishtirokchilar). Mobil va kompyuterda ishlaydi.
+- **Eslatma**: «🔔 Eslat» tugmasi — seansdan 10 daqiqa oldin botdan Telegram xabari. Bazada saqlanadi (`theatre_remind`), bot qayta ishga tushsa ham yo'qolmaydi, takror yuborilmaydi. Reja qayta tuzilsa yoki premyera bekor qilinsa — eslatma yangilanadi/o'chadi.
+- **Taklif havolasi**: xona egasi «👥 Taklif» → `https://t.me/<bot>?start=r_KOD`. Bot xona oynasini ochuvchi tugma yuboradi. Parol havolaga qo'shilmaydi; parolli xonaga parolsiz kirib bo'lmaydi.
+- **Reaksiyalar** 🔥😂😮❤️👏 va **ishtirokchilar**: real vaqt SSE (`/api/theatre/events`) orqali; reaksiyalar bazaga yozilmaydi, 0.45 s oynada paketlanadi. Xona egasi foydalanuvchini chiqara oladi (u qayta kira olmaydi).
+- Yangi sozlama kerak emas (.env o'zgarmaydi). Proksi/hosting SSE ni buferlamasligi kerak (`X-Accel-Buffering: no` yuboriladi). SSE ishlamasa, avvalgi kabi oddiy so'rovlar zaxira bo'lib ishlaydi.

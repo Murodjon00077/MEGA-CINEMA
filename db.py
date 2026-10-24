@@ -158,6 +158,22 @@ CREATE TABLE IF NOT EXISTS theatre_chat(
   text TEXT NOT NULL,
   at INTEGER NOT NULL
 );
+CREATE TABLE IF NOT EXISTS theatre_remind(
+  user_id INTEGER NOT NULL,
+  start_ts INTEGER NOT NULL,
+  kind TEXT NOT NULL DEFAULT 'slot',
+  movie_id INTEGER NOT NULL DEFAULT 0,
+  created_at INTEGER NOT NULL,
+  sent INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY(user_id, start_ts)
+);
+CREATE INDEX IF NOT EXISTS idx_threm_due ON theatre_remind(sent, start_ts);
+CREATE TABLE IF NOT EXISTS theatre_kicked(
+  room TEXT NOT NULL,
+  user_id INTEGER NOT NULL,
+  at INTEGER NOT NULL,
+  PRIMARY KEY(room, user_id)
+);
 CREATE TABLE IF NOT EXISTS trailers(
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   src_chat INTEGER NOT NULL,
@@ -200,6 +216,7 @@ CREATE TABLE IF NOT EXISTS comments(
 );
 CREATE INDEX IF NOT EXISTS idx_comments_item ON comments(item, id);
 CREATE INDEX IF NOT EXISTS idx_thchat_room ON theatre_chat(room, id);
+CREATE INDEX IF NOT EXISTS idx_thchat_user ON theatre_chat(user_id, at);
 CREATE INDEX IF NOT EXISTS idx_views_at ON views(at);
 CREATE INDEX IF NOT EXISTS idx_views_user ON views(user_id, at);
 CREATE INDEX IF NOT EXISTS idx_movies_views ON movies(views DESC);
@@ -1253,7 +1270,9 @@ async def th_room_get(rid: str):
 
 async def th_rooms_list(since: int, limit: int = 30):
     return await _all(
-        "SELECT r.*, m.title AS mtitle FROM theatre_rooms r JOIN movies m ON m.id=r.movie_id "
+        "SELECT r.*, m.title AS mtitle, m.id AS mid, m.series_id AS mseries, m.ep AS mep, m.cover_id AS mcover, "
+        "s.cover_id AS scover FROM theatre_rooms r JOIN movies m ON m.id=r.movie_id "
+        "LEFT JOIN series s ON s.id=m.series_id "
         "WHERE r.last_active >= ? ORDER BY r.last_active DESC LIMIT ?", (since, limit))
 
 
@@ -1275,6 +1294,7 @@ async def th_room_del(rid: str) -> None:
     await _db.execute("DELETE FROM theatre_rooms WHERE id=?", (rid,))
     await _db.execute("DELETE FROM theatre_members WHERE room=?", (rid,))
     await _db.execute("DELETE FROM theatre_chat WHERE room=?", (rid,))
+    await _db.execute("DELETE FROM theatre_kicked WHERE room=?", (rid,))
     await _db.commit()
 
 
@@ -1375,7 +1395,93 @@ async def alog_admins() -> list:
 
 async def th_members(rid: str) -> list:
     return await _all(
-        "SELECT u.id, u.full_name FROM theatre_members tm LEFT JOIN users u ON u.id=tm.user_id WHERE tm.room=?", (rid,))
+        "SELECT tm.user_id AS id, u.full_name FROM theatre_members tm LEFT JOIN users u ON u.id=tm.user_id WHERE tm.room=?", (rid,))
+
+
+async def th_kick(rid: str, uid: int) -> None:
+    """Foydalanuvchini xonadan chiqaradi va qayta kirishini taqiqlaydi."""
+    await _db.execute("DELETE FROM theatre_members WHERE room=? AND user_id=?", (rid, uid))
+    await _db.execute("INSERT OR REPLACE INTO theatre_kicked(room, user_id, at) VALUES(?,?,?)",
+                      (rid, uid, int(time.time())))
+    await _db.commit()
+
+
+async def th_kicked_has(rid: str, uid: int) -> bool:
+    return bool(await _one("SELECT 1 FROM theatre_kicked WHERE room=? AND user_id=?", (rid, uid)))
+
+
+# ───────────── Teatr: seansdan oldingi eslatmalar ─────────────
+async def th_remind_set(uid: int, start_ts: int, kind: str, movie_id: int = 0) -> bool:
+    """Eslatma yoqadi. Bir foydalanuvchi + bir seans = bitta yozuv (takror bo'lmaydi). Yangi qo'shilsa True."""
+    cur = await _db.execute(
+        "INSERT OR IGNORE INTO theatre_remind(user_id, start_ts, kind, movie_id, created_at) VALUES(?,?,?,?,?)",
+        (uid, int(start_ts), kind, int(movie_id), int(time.time())))
+    await _db.commit()
+    n = cur.rowcount
+    await cur.close()
+    return n > 0
+
+
+async def th_remind_del(uid: int, start_ts: int) -> None:
+    await _run("DELETE FROM theatre_remind WHERE user_id=? AND start_ts=?", (uid, int(start_ts)))
+
+
+async def th_remind_mine(uid: int, since: int, until: int) -> set:
+    """Foydalanuvchining [since, until) oralig'idagi, hali yuborilmagan eslatmalari (seans boshlanish vaqtlari)."""
+    rows = await _all("SELECT start_ts FROM theatre_remind WHERE user_id=? AND sent=0 AND start_ts>=? AND start_ts<?",
+                      (uid, int(since), int(until)))
+    return {r["start_ts"] for r in rows}
+
+
+async def th_remind_count(uid: int, now: int) -> int:
+    row = await _one("SELECT COUNT(*) c FROM theatre_remind WHERE user_id=? AND sent=0 AND start_ts>?", (uid, int(now)))
+    return int(row["c"]) if row else 0
+
+
+async def th_remind_due(now: int, lead: int, grace: int, limit: int = 300) -> list:
+    """Vaqti kelgan eslatmalar: boshlanishiga `lead` soniya qolgan yoki (kechikkan bo'lsa) boshlanganiga `grace` soniya o'tmagan."""
+    return await _all(
+        "SELECT * FROM theatre_remind WHERE sent=0 AND start_ts<=? AND start_ts>? ORDER BY start_ts LIMIT ?",
+        (int(now) + lead, int(now) - grace, limit))
+
+
+async def th_remind_claim(uid: int, start_ts: int) -> bool:
+    """Yuborishni bandlaydi (atomik): faqat bitta jarayon/tick yubora oladi — takroriy xabar chiqmaydi."""
+    cur = await _db.execute("UPDATE theatre_remind SET sent=1 WHERE user_id=? AND start_ts=? AND sent=0",
+                            (uid, int(start_ts)))
+    await _db.commit()
+    n = cur.rowcount
+    await cur.close()
+    return n > 0
+
+
+async def th_remind_release(uid: int, start_ts: int) -> None:
+    """Vaqtincha xatoda (tarmoq) keyingi tickda qayta urinish uchun band qilishni bekor qiladi."""
+    await _run("UPDATE theatre_remind SET sent=0 WHERE user_id=? AND start_ts=?", (uid, int(start_ts)))
+
+
+async def th_remind_purge(now: int) -> None:
+    await _run("DELETE FROM theatre_remind WHERE start_ts<?", (int(now) - 3600,))
+
+
+async def th_remind_pop_movie(movie_id: int) -> list:
+    """Premyera bekor qilinsa — shu premyeraga yozilganlarni qaytaradi va o'chiradi."""
+    rows = await _all("SELECT user_id, start_ts FROM theatre_remind WHERE kind='premiere' AND movie_id=? AND sent=0",
+                      (int(movie_id),))
+    await _run("DELETE FROM theatre_remind WHERE kind='premiere' AND movie_id=?", (int(movie_id),))
+    return [(r["user_id"], r["start_ts"]) for r in rows]
+
+
+async def th_remind_drop_ts(start_ts: int, kind: str | None = None) -> list:
+    """Shu vaqtdagi (bekor qilingan / ko'chirilgan) seans eslatmalarini o'chiradi, foydalanuvchilarni qaytaradi."""
+    q, par = "SELECT user_id FROM theatre_remind WHERE start_ts=? AND sent=0", [int(start_ts)]
+    if kind:
+        q += " AND kind=?"
+        par.append(kind)
+    rows = await _all(q, tuple(par))
+    dq = "DELETE FROM theatre_remind WHERE start_ts=?" + (" AND kind=?" if kind else "")
+    await _run(dq, tuple(par))
+    return [r["user_id"] for r in rows]
 
 
 # ───────────── VIP va to'lovlar ─────────────

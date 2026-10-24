@@ -7,6 +7,7 @@
 """
 import asyncio
 import hashlib
+import html
 import json
 import logging
 import os
@@ -22,6 +23,7 @@ from aiohttp import web
 
 import config
 import db
+import theatre_rt as rt
 
 log = logging.getLogger("theatre")
 
@@ -33,6 +35,10 @@ CHUNK = 1024 * 1024        # Telegram oqim bo'lagi (1 MiB)
 PREFETCH_BEFORE = 30 * 60  # keyingi kino slot boshlanishidan shuncha oldin yuklana boshlaydi
 CACHE_DIR = Path(config.DB_PATH).parent / "theatre"
 MIN_FREE = 600 * 1024 * 1024  # diskda kino hajmidan tashqari shuncha joy qolishi kerak
+REMIND_LEAD = 10 * 60      # eslatma seans boshlanishidan shuncha oldin yuboriladi
+REMIND_GRACE = 120         # bot to'xtab qolgan bo'lsa: seans boshlanib 2 daqiqagacha eslatma hali yuboriladi
+MAX_REMINDERS = 20         # bir foydalanuvchining kutilayotgan eslatmalari
+PD_TTL = 3.0               # kun rejasi (baza so'rovlari) keshi — barcha tomoshabinlar uchun umumiy
 
 # Teatrga mos kino: tayyor, mp4/mov (brauzer o'ynaydi), 2 soatdan uzun emas
 ELIG = ("m.status='live' AND m.file_size>0 AND (m.mime='' OR m.mime LIKE 'video/mp4%' "
@@ -335,7 +341,10 @@ async def rebuild_today() -> int:
     day = day_of(time.time())
     async with _plan_lock:
         await db.q_run("DELETE FROM theatre_slots WHERE day=?", (day,))
-    return len(await plan_day(day))
+    invalidate()
+    n = len(await plan_day(day))
+    rt.hub.publish("pub", "slot", {"key": await current_key()})  # zaldagilar yangi rejani darrov oladi
+    return n
 
 
 async def plan_day(day: str) -> list:
@@ -350,8 +359,14 @@ async def plan_day(day: str) -> list:
         if not built:  # kontent yo'q — bo'sh reja saqlanmaydi (keyin qayta uriniladi)
             return []
         await db.th_set_slots(day, built)
+        invalidate()
         log.info("Teatr rejasi tuzildi: %s (%s ta slot)", day, len(built))
         return await db.th_get_slots(day)
+
+
+def _cv(cover_id: str) -> str:
+    """Muqova versiyasi (web.py dagi bilan bir xil) — brauzer keshi uchun."""
+    return hashlib.md5(cover_id.encode()).hexdigest()[:8] if cover_id else ""
 
 
 async def _movies_by_id(ids: list[int]) -> dict:
@@ -359,32 +374,63 @@ async def _movies_by_id(ids: list[int]) -> dict:
         return {}
     q = ",".join("?" * len(ids))
     rows = await db.q_all(
-        f"SELECT id, title, kind, series_id, ep, year, duration, poster_id FROM movies WHERE id IN ({q})", tuple(ids))
+        "SELECT m.id, m.title, m.kind, m.series_id, m.ep, m.year, m.duration, m.poster_id, m.cover_id, "
+        f"s.cover_id AS scover FROM movies m LEFT JOIN series s ON s.id=m.series_id WHERE m.id IN ({q})", tuple(ids))
     return {r["id"]: r for r in rows}
+
+
+def _art(r) -> dict | None:
+    """Muqova (katalogdagi kabi): serial qismi uchun serialniki, yakka kino uchun o'ziniki. Yo'q bo'lsa — None (logo)."""
+    if r["series_id"] and r["scover"]:
+        return {"t": "s", "id": r["series_id"], "cv": _cv(r["scover"])}
+    if r["cover_id"]:
+        return {"t": "m", "id": r["id"], "cv": _cv(r["cover_id"])}
+    return None
 
 
 def _mv(r) -> dict | None:
     if not r:
         return None
     return {"id": r["id"], "title": r["title"], "kind": r["kind"], "ep": r["ep"] if r["series_id"] else None,
-            "year": r["year"], "duration": r["duration"], "poster": bool(r["poster_id"])}
+            "year": r["year"], "duration": r["duration"], "poster": bool(r["poster_id"]), "art": _art(r)}
 
 
-async def plan_view(day: str | None = None) -> dict:
-    """Bugungi reja (foydalanuvchiga ko'rsatiladigan ro'yxat)."""
+# Kun rejasi + kinolar ma'lumoti: 3 soniyalik umumiy kesh. Yuzlab tomoshabin bir vaqtda so'rasa ham
+# baza bitta so'rov oladi (har bir tomoshabin uchun alohida emas).
+_pd_cache: dict[str, tuple[float, tuple]] = {}
+
+
+def invalidate() -> None:
+    _pd_cache.clear()
+
+
+async def _plan_data(day: str) -> tuple[dict, dict]:
+    c = _pd_cache.get(day)
+    if c and time.time() - c[0] < PD_TTL:
+        return c[1]
+    rows = await plan_day(day)
+    val = ({r["idx"]: r for r in rows}, await _movies_by_id([r["movie_id"] for r in rows]))
+    _pd_cache[day] = (time.time(), val)
+    while len(_pd_cache) > 3:
+        _pd_cache.pop(min(_pd_cache, key=lambda k: _pd_cache[k][0]), None)
+    return val
+
+
+async def plan_view(day: str | None = None, uid: int = 0) -> dict:
+    """Bugungi reja (foydalanuvchiga ko'rsatiladigan ro'yxat). uid berilsa — eslatma holati ham qo'shiladi."""
     now = time.time()
     day = day or day_of(now)
-    rows = await plan_day(day)
-    by = {r["idx"]: r for r in rows}
-    mv = await _movies_by_id([r["movie_id"] for r in rows])
+    by, mv = await _plan_data(day)
+    mine = await db.th_remind_mine(uid, slot_start(day, 0), slot_start(day, SLOTS)) if uid else set()
     items = []
     for i in range(SLOTS):
         st = slot_start(day, i)
         r = by.get(i)
+        state_ = "now" if st <= now < st + SLOT_SEC else ("done" if now >= st + SLOT_SEC else "next")
         items.append({
             "idx": i, "start": st, "end": st + SLOT_SEC, "time": hhmm(st),
             "tag": r["tag"] if r else "", "movie": _mv(mv.get(r["movie_id"])) if r else None,
-            "state": "now" if st <= now < st + SLOT_SEC else ("done" if now >= st + SLOT_SEC else "next"),
+            "state": state_, "remind": bool(r and state_ == "next" and st in mine),
         })
     return {"day": day, "now": now, "items": items}
 
@@ -395,10 +441,7 @@ async def state() -> dict:
     local = datetime.fromtimestamp(ts, TZ)
     day = day_of(ts)
     secs = local.hour * 3600 + local.minute * 60 + local.second
-    plan = await plan_day(day)
-    by = {r["idx"]: r for r in plan}
-    ids = [r["movie_id"] for r in plan]
-    mv = await _movies_by_id(ids)
+    by, mv = await _plan_data(day)
 
     def view(i):
         r = by.get(i)
@@ -504,10 +547,18 @@ def _prefetch(mid: int) -> None:
     _dl[mid] = asyncio.create_task(_download(mid))
 
 
+_last_key = ""
+
+
 async def _tick(bot) -> None:
+    global _last_key
     now = time.time()
-    st = await state()
     await plan_day(day_of(now))
+    st = await state()
+    if st["key"] != _last_key:  # seans almashdi — zaldagilarga xabar (mijoz o'zi ham jadval bo'yicha tekshiradi)
+        if _last_key:
+            rt.hub.publish("pub", "slot", {"key": st["key"]})
+        _last_key = st["key"]
 
     # kerakli kinolar: hozirgisi va (30 daqiqa qolganda) keyingisi
     keep: set[int] = set()
@@ -564,19 +615,190 @@ async def _finish_premieres(bot, now: float) -> None:
 
 
 async def run(bot) -> None:
-    """Fon vazifasi: har 15 soniyada reja, kesh va premyeralarni yangilaydi."""
+    """Fon vazifasi: har 15 soniyada reja, kesh va premyeralarni yangilaydi; shuningdek real vaqt va eslatmalar."""
     last_clean = 0.0
+    side = [asyncio.create_task(rt.hub.run()), asyncio.create_task(_remind_loop(bot))]
+    try:
+        while True:
+            try:
+                await _tick(bot)
+                if time.time() - last_clean > 3600:
+                    last_clean = time.time()
+                    await db.th_rooms_cleanup(int(time.time()) - 6 * 3600)
+                    await db.th_remind_purge(int(time.time()))
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                log.exception("Teatr fon vazifasi xatosi")
+            await asyncio.sleep(15)
+    finally:
+        for t in side:
+            t.cancel()
+
+
+# ───────────── Premyeralar (foydalanuvchilar uchun) ─────────────
+async def premieres_view(uid: int = 0) -> list:
+    """Kelgusi premyeralar: tomoshabin ko'ra oladigan qisqa ma'lumot + eslatma holati."""
+    now = time.time()
+    rows = await db.q_all(
+        "SELECT id, title, year, kind, genre, country, quality, description, duration, premiere_at, cover_id "
+        "FROM movies WHERE status='premiere' AND premiere_at IS NOT NULL AND premiere_at>? ORDER BY premiere_at LIMIT 12",
+        (int(now),))
+    if not rows:
+        return []
+    lo, hi = min(r["premiere_at"] for r in rows), max(r["premiere_at"] for r in rows)
+    mine = await db.th_remind_mine(uid, lo, hi + 1) if uid else set()
+    today = day_of(now)
+    out = []
+    for r in rows:
+        d = (r["description"] or "").strip()
+        out.append({
+            "id": r["id"], "title": r["title"], "year": r["year"], "kind": r["kind"], "genre": r["genre"],
+            "country": r["country"], "quality": r["quality"], "duration": r["duration"],
+            "desc": d[:240] + ("…" if len(d) > 240 else ""),
+            "start": r["premiere_at"], "time": hhmm(r["premiere_at"]),
+            "day": "bugun" if day_of(r["premiere_at"]) == today else "ertaga",
+            "art": {"t": "m", "id": r["id"], "cv": _cv(r["cover_id"])} if r["cover_id"] else None,
+            "remind": r["premiere_at"] in mine,
+        })
+    return out
+
+
+# ───────────── Seansdan oldingi eslatmalar ─────────────
+class RemindError(Exception):
+    """Eslatmani yoqib bo'lmaydi (foydalanuvchiga ko'rsatiladigan xabar bilan)."""
+
+
+async def _classify(ts: int) -> tuple[str, int] | None:
+    """Seans turini aniqlaydi: ('premiere', kino_id) yoki ('slot', kino_id). Eslatma qo'yib bo'lmasa — None."""
+    day = day_of(ts)
+    off = ts - slot_start(day, 0)
+    if off < 0 or off % SLOT_SEC or off // SLOT_SEC >= SLOTS:
+        return None
+    row = await db.q_one("SELECT id FROM movies WHERE status='premiere' AND premiere_at=?", (ts,))
+    if row:
+        return "premiere", row["id"]
+    if day == day_of(time.time()):  # ertangi oddiy seanslar jadvali hali tuzilmagan — faqat bugungi va premyeralar
+        for r in await db.th_get_slots(day):
+            if r["idx"] == off // SLOT_SEC:
+                return "slot", r["movie_id"]
+    return None
+
+
+async def remind_toggle(uid: int, start_ts: int, on: bool | None = None) -> dict:
+    """Eslatmani yoqadi/o'chiradi (on=None — almashtiradi). Bir foydalanuvchi + bir seans = bitta eslatma."""
+    start_ts = int(start_ts)
+    now = time.time()
+    has = start_ts in await db.th_remind_mine(uid, start_ts, start_ts + 1)
+    want = (not has) if on is None else bool(on)
+    if not want:
+        await db.th_remind_del(uid, start_ts)
+        return {"on": False}
+    if has:
+        return {"on": True}
+    if start_ts <= now + 30:
+        raise RemindError("Bu seans allaqachon boshlangan")
+    kind = await _classify(start_ts)
+    if not kind:
+        raise RemindError("Bu seansga eslatma qo'yib bo'lmaydi")
+    if await db.th_remind_count(uid, now) >= MAX_REMINDERS:
+        raise RemindError(f"Eng ko'pi bilan {MAX_REMINDERS} ta eslatma qo'yish mumkin")
+    await db.th_remind_set(uid, start_ts, kind[0], kind[1])
+    return {"on": True, "left": int(start_ts - now)}
+
+
+async def _remind_target(r) -> str | None:
+    """Eslatma hali ham to'g'rimi? To'g'ri bo'lsa — kino nomi, aks holda None (eslatma o'chiriladi).
+    Reja qayta tuzilsa yoki premyera bekor qilinsa — shu yerda hisobga olinadi."""
+    ts = r["start_ts"]
+    if r["kind"] == "premiere":
+        mv = await db.get_movie(r["movie_id"])
+        if mv and mv["status"] == "premiere" and mv["premiere_at"] == ts:
+            return mv["title"]
+        return None
+    day = day_of(ts)
+    off = ts - slot_start(day, 0)
+    if off < 0 or off % SLOT_SEC:
+        return None
+    for row in await db.th_get_slots(day):
+        if row["idx"] == off // SLOT_SEC:
+            mv = await db.get_movie(row["movie_id"])
+            if not mv:
+                return None
+            return mv["title"] + (f" · {mv['ep']}-qism" if mv["series_id"] and mv["ep"] else "")
+    return None
+
+
+def _remind_kb(start_ts: int):
+    if not config.WEBAPP_URL:
+        return None
+    from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
+    url = config.WEBAPP_URL + ("&" if "?" in config.WEBAPP_URL else "?") + "th=pub"
+    return InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text="🎭 Teatrga kirish", web_app=WebAppInfo(url=url))]])
+
+
+async def _send_reminders(bot) -> None:
+    if not _enabled:
+        return
+    now = time.time()
+    rows = await db.th_remind_due(int(now), REMIND_LEAD, REMIND_GRACE)
+    if not rows:
+        return
+    from aiogram.exceptions import TelegramBadRequest, TelegramForbiddenError, TelegramRetryAfter
+    memo: dict[tuple, str | None] = {}
+    for r in rows:
+        uid, ts = r["user_id"], r["start_ts"]
+        key = (r["kind"], ts, r["movie_id"])
+        if key not in memo:
+            memo[key] = await _remind_target(r)
+        title = memo[key]
+        if title is None:  # seans bekor qilingan / reja o'zgargan — jim o'chiramiz
+            await db.th_remind_del(uid, ts)
+            continue
+        if not await db.th_remind_claim(uid, ts):  # boshqa tick allaqachon oldi — takror yubormaymiz
+            continue
+        left = ts - time.time()
+        when = "hozir boshlandi" if left <= 30 else f"{max(1, round(left / 60))} daqiqadan keyin boshlanadi"
+        head = "⭐ <b>Premyera</b>" if r["kind"] == "premiere" else "🎬 <b>Seans</b>"
+        text = f"{head} {when}!\n\n<b>{html.escape(title)}</b>\n🕒 {hhmm(ts)}\n\nBirga tomosha qilamiz 🍿"
+        try:
+            await bot.send_message(uid, text, reply_markup=_remind_kb(ts))
+        except TelegramRetryAfter as e:
+            await db.th_remind_release(uid, ts)
+            await asyncio.sleep(min(e.retry_after + 1, 30))
+        except (TelegramForbiddenError, TelegramBadRequest):
+            log.info("Eslatma yuborilmadi (foydalanuvchi botni to'sgan yoki chat yo'q): %s", uid)
+        except Exception as e:
+            log.warning("Eslatma yuborishda xato (%s): %s — keyinroq qayta uriniladi", uid, e)
+            await db.th_remind_release(uid, ts)
+        await asyncio.sleep(0.05)  # Telegram chegarasi (≈30 xabar/s) dan past turamiz
+
+
+async def _remind_loop(bot) -> None:
     while True:
         try:
-            await _tick(bot)
-            if time.time() - last_clean > 3600:
-                last_clean = time.time()
-                await db.th_rooms_cleanup(int(time.time()) - 6 * 3600)
+            await _send_reminders(bot)
         except asyncio.CancelledError:
             raise
         except Exception:
-            log.exception("Teatr fon vazifasi xatosi")
-        await asyncio.sleep(15)
+            log.exception("Eslatmalar vazifasi xatosi")
+        await asyncio.sleep(20)
+
+
+async def on_premiere_cancel(bot, movie_id: int, title: str) -> None:
+    """Premyera bekor qilindi: unga eslatma qo'ygan foydalanuvchilarga xabar beriladi, eslatmalar o'chiriladi."""
+    users = await db.th_remind_pop_movie(movie_id)
+    invalidate()
+
+    async def _notify():
+        for uid, _ts in users:
+            try:
+                await bot.send_message(uid, f"ℹ️ <b>{html.escape(title)}</b> premyerasi bekor qilindi. Eslatma o'chirildi.")
+            except Exception:
+                pass
+            await asyncio.sleep(0.05)
+    if users:
+        asyncio.create_task(_notify())
 
 
 # ───────────── Videoni berish (Range bilan) ─────────────
@@ -652,12 +874,28 @@ def seen(key: str, uid: int) -> None:
     _presence.setdefault(key, {})[uid] = time.time()
 
 
-def viewers(key: str) -> int:
+def gone(key: str, uid: int) -> None:
+    d = _presence.get(key)
+    if d:
+        d.pop(uid, None)
+
+
+def online(key: str) -> set:
+    """Hozir xonada/zalda bo'lganlar: ochiq real vaqt ulanishi yoki oxirgi 25 soniyada so'rov yuborganlar."""
     d = _presence.get(key) or {}
     cut = time.time() - 25
     for u in [u for u, t in d.items() if t < cut]:
         d.pop(u, None)
-    return len(d)
+    if not d and key != "pub":
+        _presence.pop(key, None)
+    return set(d) | rt.hub.users(key)
+
+
+def viewers(key: str) -> int:
+    return len(online(key))
+
+
+rt.hub.on_seen, rt.hub.on_gone, rt.hub.count = seen, gone, viewers
 
 
 # ───────────── Xonalar ─────────────

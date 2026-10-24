@@ -8,7 +8,7 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import Command, CommandObject, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
-from aiogram.types import CallbackQuery, FSInputFile, Message
+from aiogram.types import CallbackQuery, FSInputFile, InlineKeyboardMarkup, Message
 
 import config
 import db
@@ -100,11 +100,44 @@ async def reply_deliver(bot: Bot, event: Message | CallbackQuery, movie_id: int)
     return res
 
 
+# ───────────── Teatr: xonaga taklif havolasi ─────────────
+# Obuna tekshiruvidan o'tmagan foydalanuvchining taklifi vaqtincha eslab qolinadi (obunadan keyin xonaga olib boriladi)
+_pending_room: dict[int, str] = {}
+
+
+async def send_room_invite(bot: Bot, chat_id: int, rid: str) -> bool:
+    """Taklif xabari: xona nomi, kim ochgani va xonani ochuvchi tugma. Xona yo'q bo'lsa — tushunarli xabar."""
+    room = await db.th_room_get(rid)
+    if not room:
+        await bot.send_message(chat_id, "😕 Bu xona yopilgan yoki havola eskirgan.\n"
+                                        "Do'stingizdan yangi havola so'rang yoki Teatrda o'z xonangizni oching.",
+                               reply_markup=kb.open_catalog_kb())
+        return False
+    btn = kb.theatre_button("🚪 Xonaga kirish", room=rid)
+    lock = "\n🔒 Xona parolli — parolni xona egasidan so'rang." if room["pw"] else ""
+    await bot.send_message(
+        chat_id,
+        f"🎬 <b>{html.escape(room['title'])}</b>\n👤 {html.escape(room['owner_name'] or 'Foydalanuvchi')} sizni birga kino "
+        f"ko'rishga taklif qildi!{lock}\n\nKirish uchun pastdagi tugmani bosing 👇",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[[btn]]) if btn else None)
+    return True
+
+
 # ───────────── Buyruqlar ─────────────
 @router.message(CommandStart())
 async def cmd_start(m: Message, command: CommandObject, bot: Bot, state: FSMContext):
     await state.clear()
     payload = command.args or ""
+    rm = re.fullmatch(r"r_([A-Za-z0-9]{4,8})", payload)  # Teatr: xonaga taklif
+    if rm:
+        rid = rm.group(1).upper()
+        if not await gate(bot, m, 0):
+            if len(_pending_room) > 5000:
+                _pending_room.clear()
+            _pending_room[m.from_user.id] = rid
+            return
+        await send_room_invite(bot, m.chat.id, rid)
+        return
     if payload == "vip":  # Mini App'dagi «VIP olish» tugmasi
         await vip_handlers.show_menu(m)
         return
@@ -167,6 +200,10 @@ async def cb_check(c: CallbackQuery, bot: Bot):
         await c.message.delete()
     except TelegramBadRequest:
         pass
+    rid = _pending_room.pop(c.from_user.id, "")
+    if rid and not mid:  # obunadan oldin taklif havolasi bilan kelgan edi
+        await send_room_invite(bot, chat_id, rid)
+        return
     if mid:
         res = await svc.deliver(bot, chat_id, c.from_user.id, mid)
         if res in ("ok", "vip"):

@@ -337,69 +337,264 @@ textarea.inp{min-height:96px;resize:vertical;line-height:1.4}
 .vipbox .btn{width:100%}
 .gear:not([hidden])~.tbtn{right:64px}
 .top:has(.gear:not([hidden])) .brand{padding-right:104px}
-.th{position:fixed;inset:0;z-index:80;background:#03040a;color:#e9ecf7;display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(24px);transition:opacity .3s,transform .3s,visibility 0s .3s;padding-top:env(safe-area-inset-top)}
+/* ══════════ Teatr — yagona dizayn tizimi ══════════ */
+.th{--t-bg:#05060d;--t-s1:#0b0e1b;--t-s2:#11152a;--t-line:#1c2240;--t-mut:#8d96b6;--t-txt:#eef0fa;--t-live:#ff3b5c;
+  --t-disp:"Bebas Neue",Impact,"Arial Narrow",sans-serif;
+  position:fixed;inset:0;z-index:80;color:var(--t-txt);display:flex;flex-direction:column;opacity:0;visibility:hidden;transform:translateY(24px);
+  transition:opacity .3s,transform .3s,visibility 0s .3s;padding-top:env(safe-area-inset-top);
+  background:radial-gradient(120% 55% at 50% -12%,rgba(var(--a1rgb),.17),transparent 62%),radial-gradient(70% 40% at 100% 34%,rgba(70,100,255,.08),transparent 70%),var(--t-bg)}
 .th.on{opacity:1;visibility:visible;transform:none;transition:opacity .3s,transform .3s}
-.th-top{flex:none;display:flex;align-items:center;gap:8px;padding:12px 14px}
-.th-back{flex:none;width:36px;height:36px;border-radius:12px;background:#0d101c;border:1px solid #1b2038;font-size:16px}
-.th-title{flex:1;min-width:0;font-weight:800;font-size:17px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th button{color:inherit}
+.th-top{flex:none;display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(180deg,rgba(5,6,13,.9),rgba(5,6,13,0));position:relative;z-index:3}
+.th-back{flex:none;width:38px;height:38px;border-radius:13px;background:var(--t-s1);border:1px solid var(--t-line);transition:transform .15s,background .2s}
+.th-back:active{transform:scale(.92)}
+.th-title{flex:1;min-width:0;font-family:var(--t-disp);font-size:25px;letter-spacing:1.6px;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .th-right{flex:none;display:flex;gap:6px;align-items:center}
-.th-chip{flex:none;padding:7px 11px;border-radius:99px;background:#0d101c;border:1px solid #1b2038;font-size:12.5px;font-weight:700;color:#e9ecf7}
-.th-body{flex:1;min-height:0;overflow-y:auto;padding:4px 14px calc(24px + env(safe-area-inset-bottom))}
+.th-chip{flex:none;display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:0 11px;border-radius:99px;background:var(--t-s1);border:1px solid var(--t-line);font-size:12.5px;font-weight:700;transition:transform .15s,border-color .2s}
+.th-chip:active{transform:scale(.94)}
+.th-chip.acc{background:var(--grad);color:var(--onacc);border-color:transparent}
+.th-chip.gh{color:#c3b5ff;border-color:rgba(160,140,255,.5);background:rgba(120,100,255,.14)}
+.th-chip .si{width:15px;height:15px;vertical-align:-3px}
+.th-title .si,.th-back .si{width:20px;height:20px;vertical-align:middle}
+.th-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:2px 14px calc(28px + env(safe-area-inset-bottom))}
 .th-body.hall-mode{padding:0;overflow:hidden;display:flex;flex-direction:column}
-.thc{display:block;width:100%;text-align:left;padding:18px;border-radius:20px;margin-top:14px;background:linear-gradient(145deg,#0f1324,#080a14);border:1px solid #1b2038;position:relative;overflow:hidden;color:#e9ecf7}
-.thc::after{content:"";position:absolute;right:-30px;top:-30px;width:130px;height:130px;border-radius:50%;background:radial-gradient(rgba(var(--a1rgb),.28),transparent 70%);pointer-events:none}
-.thc .ti{font-size:34px}
-.thc b{display:block;font-size:18px;margin-top:6px}
-.thc span{display:block;color:#8f98b5;font-size:13px;margin-top:4px}
-.thc .lv{color:#ff7a8e;font-weight:700}
-.thlink{margin-top:10px;padding:9px 14px;border-radius:12px;background:#0d101c;border:1px solid #1b2038;font-size:13px;font-weight:700;color:#e9ecf7}
-.hall{flex:1;min-height:0;display:flex;flex-direction:column}
-.stage{flex:none;position:relative;padding:4px 0 6px;background:radial-gradient(120% 100% at 50% 0,rgba(var(--a1rgb),.12),transparent 62%)}
-.vbox{position:relative;width:100%;aspect-ratio:16/9;background:#000;box-shadow:0 0 70px 6px rgba(var(--a1rgb),.16),0 26px 60px rgba(0,0,0,.95);overflow:hidden}
-.vbox video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
-.vbox.nc video{pointer-events:none}
-.vov{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:14px;background:rgba(0,0,0,.82)}
-.vov[hidden]{display:none}
-.vov .big{font-size:38px;line-height:1}
-.vov b{font-size:15.5px;max-width:92%}
-.vov small{color:#9aa3c2;font-size:12.5px}
-.vplay{margin-top:6px;padding:11px 24px;border-radius:99px;background:var(--grad);color:var(--onacc);font-weight:800;font-size:15px;box-shadow:0 6px 20px rgba(var(--a1rgb),.4)}
-.vctl{position:absolute;right:8px;bottom:8px;z-index:3;display:flex;gap:6px}
-.vctl button{width:34px;height:34px;border-radius:50%;background:rgba(0,0,0,.55);font-size:15px;color:#fff}
-.seats{height:14px;margin-top:8px;background:radial-gradient(circle at 11px 16px,#0a0d19 10px,transparent 11px) 0 0/22px 14px repeat-x}
-.hinfo{flex:none;padding:2px 14px 8px}
-.hinfo .nm{font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.hinfo .sm{color:#8f98b5;font-size:12.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ptag{font-size:10.5px;padding:2px 8px;border-radius:99px;background:var(--grad);color:var(--onacc);font-weight:800}
-.hchat{flex:1;min-height:0;display:flex;flex-direction:column;border-top:1px solid #151a2e;background:#05060d}
-.thm{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.72);display:flex;align-items:flex-end}
-.thm-box{width:100%;max-height:84%;overflow:auto;background:#0a0d18;border-radius:22px 22px 0 0;border-top:1px solid #1b2038;padding:16px 14px calc(18px + env(safe-area-inset-bottom))}
-.thm-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
-.thm-hd b{font-size:17px}
-.pl{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:14px;background:#0f1324;border:1px solid #1b2038;margin-top:8px;width:100%;text-align:left;color:#e9ecf7}
-.pl.now{border-color:var(--a1);background:rgba(var(--a1rgb),.12)}
-.pl.done{opacity:.5}
-.pl .tm{flex:none;font-weight:800;font-size:15px;min-width:48px}
-.pl .tx{flex:1;min-width:0}
-.pl .tx b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl .tx span{color:#8f98b5;font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pl .st{flex:none;font-size:11.5px;font-weight:800;color:#8f98b5}
-.pl.now .st{color:#ff7a8e}
-.th .inp{background:#0d101c;border-color:#1b2038;color:#e9ecf7}
-.th .lbl{color:#8f98b5}
-.th .panel{background:#0a0d18;border-color:#1b2038}
-.th .note{color:#8f98b5;font-size:12.5px}
-.joinrow{display:flex;gap:8px;margin-top:12px}
-.joinrow .inp{flex:1;min-width:0;text-transform:uppercase;letter-spacing:3px;text-align:center;font-weight:800}
-.joinrow button{flex:none;padding:0 18px;border-radius:12px;background:var(--grad);color:var(--onacc);font-weight:800}
-.pks{margin-top:8px;display:grid;gap:6px}
-.pk{padding:10px 12px;border-radius:12px;background:#0d101c;border:1px solid #1b2038;text-align:left;font-size:14px;font-weight:600;color:#e9ecf7;width:100%}
-.pk small{display:block;color:#8f98b5;font-weight:500;font-size:12px}
-.pksel{margin-top:8px;padding:10px 12px;border-radius:12px;background:rgba(var(--a1rgb),.12);border:1px solid var(--a1);display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
-.pksel span{flex:1;min-width:0}
-.th .qchips button{color:#8f98b5}
+.t2-wrap{max-width:780px;margin:0 auto}
+@keyframes t2in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes t2pulse{0%{box-shadow:0 0 0 0 rgba(255,59,92,.65)}70%{box-shadow:0 0 0 9px rgba(255,59,92,0)}100%{box-shadow:0 0 0 0 rgba(255,59,92,0)}}
+@keyframes t2eq{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@keyframes t2sk{0%{background-position:100% 0}100%{background-position:-100% 0}}
+@keyframes t2float{0%{opacity:0;transform:translate(0,0) scale(.5)}12%{opacity:1;transform:translate(0,-18px) scale(1.15)}100%{opacity:0;transform:translate(var(--dx,0),-190px) scale(.9)}}
+@keyframes t2pop{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+.t2-in{animation:t2in .45s both cubic-bezier(.2,.8,.2,1)}
+
+/* — Bosh sahifa: «Hozir efirda» — */
+.t2-hero{position:relative;border-radius:28px;overflow:hidden;margin-top:6px;border:1px solid var(--t-line);background:var(--t-s1);isolation:isolate;box-shadow:0 22px 60px rgba(0,0,0,.55)}
+.t2-hero-bg{position:absolute;inset:-34px;z-index:-2;filter:blur(28px) saturate(1.35);opacity:.6;transform:scale(1.1)}
+.t2-hero-bg .poster{position:absolute;inset:0;aspect-ratio:auto;border-radius:0}
+.t2-hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgba(5,6,13,.2) 0,rgba(5,6,13,.78) 62%,rgba(5,6,13,.94))}
+.t2-hero-in{display:flex;gap:15px;padding:20px 16px 14px;align-items:flex-end}
+.t2-hero-poster{flex:none;width:112px;border-radius:16px;overflow:hidden;position:relative;box-shadow:0 16px 36px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.1)}
+.t2-hero-poster .poster{border-radius:0}
+.t2-hero-tx{flex:1;min-width:0;padding-bottom:2px}
+.t2-live{display:inline-flex;align-items:center;gap:7px;font-weight:800;font-size:11.5px;letter-spacing:.14em;color:#ff7b92}
+.t2-live.idle{color:var(--t-mut)}
+.t2-dot{width:9px;height:9px;border-radius:50%;background:var(--t-live);animation:t2pulse 1.7s infinite}
+.t2-live.idle .t2-dot{background:var(--t-mut);animation:none}
+.t2-hero h2{font-family:var(--t-disp);font-weight:400;font-size:34px;line-height:.98;letter-spacing:1px;margin:7px 0 6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 3px 18px rgba(0,0,0,.6)}
+.t2-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;color:#c7cde6;font-size:12.5px}
+.t2-tag{display:inline-block;padding:3px 9px;border-radius:99px;background:rgba(255,255,255,.1);font-size:11px;font-weight:800;letter-spacing:.02em}
+.t2-tag.pr{background:var(--grad);color:var(--onacc)}
+.t2-hero-ft{padding:0 16px 18px}
+.t2-bar{height:4px;border-radius:4px;background:rgba(255,255,255,.15);overflow:hidden;margin:2px 0 11px}
+.t2-bar i{display:block;height:100%;width:0;background:var(--grad);border-radius:4px;transition:width 1s linear}
+.t2-ft-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.t2-ft-row .grow{flex:1;min-width:0;font-size:12.5px;color:#c7cde6}
+.t2-cta{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 24px;border-radius:99px;background:var(--grad);color:var(--onacc)!important;font-weight:800;font-size:15.5px;box-shadow:0 12px 28px rgba(var(--a1rgb),.4);transition:transform .15s,box-shadow .2s}
+.t2-cta:active{transform:scale(.96)}
+@media(hover:hover){.t2-cta:hover{box-shadow:0 14px 34px rgba(var(--a1rgb),.55)}}
+.t2-cta.ghost{background:rgba(255,255,255,.1);color:var(--t-txt)!important;box-shadow:none}
+.t2-empty{padding:26px 18px;text-align:center;color:var(--t-mut);font-size:13.5px;border-radius:22px;border:1px dashed var(--t-line);background:rgba(11,14,27,.6)}
+.t2-empty .e{font-size:40px;margin-bottom:6px}
+.t2-empty b{display:block;color:var(--t-txt);font-size:15px;margin-bottom:3px}
+.t2-empty .t2-cta{margin-top:12px}
+.t2-sec{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:28px 2px 11px}
+.t2-sec h3{font-family:var(--t-disp);font-weight:400;font-size:25px;letter-spacing:1.2px;line-height:1;white-space:nowrap}
+.t2-sec small{color:var(--t-mut);font-size:12px;padding-bottom:2px;white-space:nowrap}
+.t2-link{padding:6px 12px;border-radius:99px;background:var(--t-s1);border:1px solid var(--t-line);font-size:12.5px;font-weight:700}
+
+/* — Bugungi efir jadvali — */
+.t2-sched{display:grid;gap:9px}
+.t2-row{display:grid;grid-template-columns:68px 44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px 10px 10px;border-radius:18px;background:var(--t-s1);border:1px solid var(--t-line);position:relative;overflow:hidden}
+.t2-row .tm{font-family:var(--t-disp);font-size:25px;letter-spacing:.5px;line-height:1;text-align:left;padding-left:4px;white-space:nowrap}
+.t2-row .th2{width:44px;border-radius:9px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+.t2-row .th2 .poster{border-radius:0}
+.t2-row .tx{min-width:0;text-align:left}
+.t2-row .tx b{display:block;font-size:14.5px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-row .tx span{display:block;color:var(--t-mut);font-size:12px;margin-top:3px}
+.t2-row.now{border-color:rgba(var(--a1rgb),.75);background:linear-gradient(90deg,rgba(var(--a1rgb),.22),var(--t-s1) 70%);box-shadow:0 0 0 1px rgba(var(--a1rgb),.22),0 14px 34px rgba(var(--a1rgb),.14)}
+.t2-row.now .tm{color:#fff}
+.t2-row.done{opacity:.46}
+.t2-row.done .th2{filter:grayscale(1)}
+.t2-eq{display:inline-flex;gap:2px;align-items:flex-end;height:14px;margin-right:6px;vertical-align:-1px}
+.t2-eq i{width:3px;height:100%;border-radius:2px;background:var(--t-live);transform-origin:bottom;animation:t2eq .9s ease-in-out infinite}
+.t2-eq i:nth-child(2){animation-delay:.2s}.t2-eq i:nth-child(3){animation-delay:.45s}
+.t2-st{font-size:11.5px;font-weight:800;color:var(--t-mut);white-space:nowrap}
+.t2-row.now .t2-st{color:#ff8da0}
+.t2-bell{flex:none;display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 12px;border-radius:99px;background:rgba(255,255,255,.07);border:1px solid var(--t-line);font-size:12.5px;font-weight:800;transition:transform .15s,background .2s,border-color .2s}
+.t2-bell:active{transform:scale(.93)}
+.t2-bell.on{background:rgba(var(--a1rgb),.2);border-color:var(--a1);color:#fff}
+.t2-bell.pop{animation:t2pop .35s}
+.t2-bell:disabled{opacity:.5}
+
+/* — Premyeralar — */
+.t2-prem{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x proximity;padding:2px 2px 10px;margin:0 -14px;padding-left:14px;padding-right:14px;scrollbar-width:none}
+.t2-prem::-webkit-scrollbar{display:none}
+.t2-pc{flex:none;width:158px;scroll-snap-align:start;border-radius:20px;overflow:hidden;background:var(--t-s1);border:1px solid var(--t-line);text-align:left;transition:transform .18s,border-color .2s}
+.t2-pc:active{transform:scale(.97)}
+@media(hover:hover){.t2-pc:hover{transform:translateY(-3px);border-color:rgba(var(--a1rgb),.5)}}
+.t2-pc-img{position:relative}
+.t2-pc-img .poster{border-radius:0}
+.t2-pc-img::after{content:"";position:absolute;inset:auto 0 0 0;height:64%;background:linear-gradient(0deg,rgba(5,6,13,.95),transparent)}
+.t2-pc-when{position:absolute;left:10px;bottom:9px;z-index:2;font-family:var(--t-disp);font-size:21px;letter-spacing:1px;line-height:1}
+.t2-pc-when small{display:block;font-family:inherit;font-size:12px;letter-spacing:1.5px;color:#ffc766}
+.t2-pc-star{position:absolute;top:9px;left:9px;z-index:2;padding:3px 9px;border-radius:99px;background:var(--grad);color:var(--onacc);font-size:10.5px;font-weight:800;letter-spacing:.04em}
+.t2-pc-bd{padding:9px 10px 11px}
+.t2-pc-bd b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:13.5px;line-height:1.25;min-height:2.5em}
+.t2-pc-bd span{display:block;color:var(--t-mut);font-size:11.5px;margin:3px 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-pc .t2-bell{width:100%;justify-content:center}
+
+/* — Xonalar — */
+.t2-actions{display:grid;grid-template-columns:1fr;gap:10px}
+.t2-new{display:flex;align-items:center;gap:13px;padding:15px 16px;border-radius:22px;background:linear-gradient(135deg,rgba(var(--a1rgb),.28),rgba(var(--a1rgb),.06));border:1px solid rgba(var(--a1rgb),.45);text-align:left;width:100%;transition:transform .15s}
+.t2-new:active{transform:scale(.98)}
+.t2-new .ic{flex:none;width:46px;height:46px;border-radius:15px;background:var(--grad);color:var(--onacc);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:300}
+.t2-new b{display:block;font-size:16px}
+.t2-new small{display:block;color:#c7cde6;font-size:12.5px;margin-top:2px}
+.joinrow{display:flex;gap:8px}
+.joinrow .inp{flex:1;min-width:0;text-transform:uppercase;letter-spacing:5px;text-align:center;font-weight:800;font-size:17px}
+.joinrow button{flex:none;padding:0 22px;border-radius:14px;background:var(--t-s2);border:1px solid var(--t-line);font-weight:800}
+.joinrow button:active{background:var(--grad);color:var(--onacc)}
+.t2-rooms{display:grid;gap:9px;margin-top:4px}
+.t2-room{display:grid;grid-template-columns:54px minmax(0,1fr) auto;gap:12px;align-items:center;padding:10px 12px 10px 10px;border-radius:18px;background:var(--t-s1);border:1px solid var(--t-line);text-align:left;width:100%;transition:transform .15s,border-color .2s}
+.t2-room:active{transform:scale(.98)}
+@media(hover:hover){.t2-room:hover{border-color:rgba(var(--a1rgb),.5)}}
+.t2-room .th2{width:54px;border-radius:11px;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.08);position:relative}
+.t2-room .th2 .poster{border-radius:0}
+.t2-room .lk{position:absolute;right:3px;bottom:3px;width:20px;height:20px;border-radius:7px;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center}
+.t2-room .lk .si{width:12px;height:12px}
+.t2-room .tx{min-width:0}
+.t2-room .tx b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-room .tx span{display:block;color:var(--t-mut);font-size:12px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-room .vw{font-size:12.5px;font-weight:800;white-space:nowrap}
+.t2-room.mine{border-color:rgba(var(--a1rgb),.4)}
+.t2-sk{border-radius:22px;background:linear-gradient(90deg,var(--t-s1) 25%,var(--t-s2) 40%,var(--t-s1) 55%);background-size:300% 100%;animation:t2sk 1.4s linear infinite}
+
+/* — Modal oynalar — */
+.thm{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.72);backdrop-filter:blur(3px);display:flex;align-items:flex-end;justify-content:center;animation:t2fade .2s both}
+@keyframes t2fade{from{opacity:0}}
+@keyframes t2up{from{transform:translateY(40px);opacity:.4}}
+.thm-box{width:100%;max-width:560px;max-height:88%;overflow:auto;background:#0a0d1a;border-radius:26px 26px 0 0;border:1px solid var(--t-line);border-bottom:0;padding:10px 16px calc(20px + env(safe-area-inset-bottom));animation:t2up .28s cubic-bezier(.2,.8,.2,1) both}
+.thm-box::before{content:"";display:block;width:42px;height:4px;border-radius:4px;background:var(--t-line);margin:0 auto 12px}
+.thm-hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.thm-hd b{font-family:var(--t-disp);font-weight:400;font-size:25px;letter-spacing:1.4px}
+.thm-hd .th-back{width:34px;height:34px;border-radius:50%;font-size:14px}
+.t2-det{display:flex;gap:14px;margin:6px 0 10px}
+.t2-det .pc{flex:none;width:104px;border-radius:14px;overflow:hidden;box-shadow:0 12px 28px rgba(0,0,0,.55)}
+.t2-det .pc .poster{border-radius:0}
+.t2-det h4{font-size:19px;line-height:1.2;margin-bottom:6px}
+.t2-det p{color:#b6bddb;font-size:13.5px;line-height:1.45;margin:8px 0 0}
+.t2-big{width:100%;margin-top:14px}
+
+/* — Formalar (yangi xona va hokazo) — */
+.th .inp{background:var(--t-s2);border:1px solid var(--t-line);color:var(--t-txt);border-radius:14px}
+.th .inp:focus{border-color:var(--a1)}
+.th .lbl{color:var(--t-mut);font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.th .panel{background:var(--t-s1);border:1px solid var(--t-line);border-radius:22px}
+.th .note{color:var(--t-mut);font-size:12.5px;line-height:1.45}
+.t2-seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;border-radius:16px;background:var(--t-s2);border:1px solid var(--t-line)}
+.t2-seg button{padding:11px 6px;border-radius:12px;font-weight:800;font-size:14px;color:var(--t-mut);transition:.2s}
+.t2-seg button.on{background:var(--grad);color:var(--onacc)}
+.t2-pw{position:relative;margin-top:10px}
+.t2-pw .inp{padding-right:48px}
+.t2-pw button{position:absolute;right:4px;top:4px;bottom:4px;width:42px;border-radius:11px;color:var(--t-mut)}
+.t2-cnt{float:right;font-size:11.5px;color:var(--t-mut);font-weight:600;letter-spacing:0;text-transform:none}
+.th .qchips button{color:var(--t-mut);background:var(--t-s2);border-color:var(--t-line)}
 .th .qchips button.on{color:#fff}
 .th .qchips button:disabled{opacity:.35}
+.pks{margin-top:8px;display:grid;gap:6px}
+.pk,.pl{padding:11px 13px;border-radius:14px;background:var(--t-s1);border:1px solid var(--t-line);text-align:left;font-size:14px;font-weight:600;width:100%;margin-top:8px}
+.pk small{display:block;color:var(--t-mut);font-weight:500;font-size:12px}
+.pl{display:flex;align-items:center;gap:12px}
+.pl .tm{flex:none;font-family:var(--t-disp);font-size:24px;letter-spacing:1px;min-width:52px}
+.pl .tx{flex:1;min-width:0}
+.pl .tx b{display:block;font-size:14px}
+.pl .tx span{color:var(--t-mut);font-size:12px;display:block}
+.pl .st{flex:none;font-size:11.5px;font-weight:800;color:var(--t-mut)}
+.thlink{margin-top:10px;padding:10px 14px;border-radius:14px;background:var(--t-s1);border:1px solid var(--t-line);font-size:13px;font-weight:700;width:100%}
+
+/* — Zal (video + reaksiya + chat + ishtirokchilar) — */
+.t2-hall{flex:1;min-height:0;display:flex;flex-direction:column}
+.t2-main{flex:none}
+.t2-side{flex:1;min-height:0;display:flex;flex-direction:column;background:rgba(5,6,13,.85);border-top:1px solid var(--t-line)}
+.stage{position:relative;padding:2px 0 4px;background:radial-gradient(120% 100% at 50% 0,rgba(var(--a1rgb),.14),transparent 62%)}
+.vbox{position:relative;width:100%;aspect-ratio:16/9;background:#000;box-shadow:0 0 80px 6px rgba(var(--a1rgb),.17),0 26px 60px rgba(0,0,0,.95);overflow:hidden}
+.vbox:fullscreen{aspect-ratio:auto;width:100vw;height:100vh}
+.vbox video{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000}
+.vbox.nc video{pointer-events:none}
+.vov{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:6px;padding:14px;background:radial-gradient(circle at 50% 40%,rgba(var(--a1rgb),.16),rgba(0,0,0,.9) 70%)}
+.vov[hidden]{display:none}
+.vov .big{font-size:40px;line-height:1}
+.vov b{font-size:16px;max-width:92%}
+.vov small{color:#a3abc9;font-size:12.5px}
+.vplay{margin-top:8px;padding:12px 26px;border-radius:99px;background:var(--grad);color:var(--onacc);font-weight:800;font-size:15px;box-shadow:0 8px 24px rgba(var(--a1rgb),.45);transition:transform .15s}
+.vplay:active{transform:scale(.95)}
+.vctl{position:absolute;right:8px;bottom:8px;z-index:3;display:flex;gap:6px}
+.vctl button{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);font-size:15px;color:#fff}
+.vbox.host-ctl .vctl{bottom:46px}
+.seats{height:14px;margin-top:8px;background:radial-gradient(circle at 11px 16px,#0a0d19 10px,transparent 11px) 0 0/22px 14px repeat-x}
+.t2-rxl{position:absolute;inset:0;z-index:4;pointer-events:none;overflow:hidden}
+.t2-rxl span{position:absolute;bottom:14%;font-size:30px;line-height:1;animation:t2float 2.3s ease-out forwards;will-change:transform,opacity;filter:drop-shadow(0 4px 8px rgba(0,0,0,.55))}
+.t2-sync{position:absolute;left:10px;top:10px;z-index:3;padding:4px 10px;border-radius:99px;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);font-size:11px;font-weight:800;letter-spacing:.04em;pointer-events:none;opacity:.95}
+.t2-sync .d{display:inline-block;width:7px;height:7px;border-radius:50%;background:#3ddc97;margin-right:6px}
+.t2-sync.warn .d{background:#ffb020}
+.hinfo{flex:none;padding:6px 14px 4px}
+.hinfo .nm{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.25}
+.hinfo .sm{color:var(--t-mut);font-size:12.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ptag{font-size:10.5px;padding:3px 9px;border-radius:99px;background:var(--grad);color:var(--onacc);font-weight:800}
+.t2-rx{flex:none;display:flex;align-items:center;gap:8px;padding:6px 14px 8px;overflow-x:auto;scrollbar-width:none}
+.t2-rx::-webkit-scrollbar{display:none}
+.t2-rx button{flex:none;width:46px;height:42px;border-radius:15px;background:var(--t-s1);border:1px solid var(--t-line);font-size:22px;line-height:1;transition:transform .12s,background .2s,opacity .2s}
+.t2-rx button:active{transform:scale(.88)}
+.t2-rx button.pop{animation:t2pop .3s}
+.t2-rx button.cd{opacity:.45}
+.t2-rx .sp{flex:1}
+.t2-rx .inv{flex:none;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:15px;background:rgba(var(--a1rgb),.16);border:1px solid rgba(var(--a1rgb),.55);font-size:13px;font-weight:800;width:auto}
+.t2-tabs{flex:none;display:flex;gap:6px;padding:8px 12px 0}
+.t2-tabs button{flex:1;padding:9px 6px;border-radius:13px 13px 0 0;font-weight:800;font-size:13.5px;color:var(--t-mut);border-bottom:2px solid transparent;transition:.2s}
+.t2-tabs button.on{color:var(--t-txt);border-bottom-color:var(--a1);background:linear-gradient(0deg,rgba(var(--a1rgb),.12),transparent)}
+.t2-tabs .n{display:inline-block;min-width:20px;padding:1px 6px;margin-left:5px;border-radius:99px;background:var(--t-s2);font-size:11px}
+.t2-pane{flex:1;min-height:0;display:none;flex-direction:column}
+.t2-pane.on{display:flex}
+.hchat{flex:1;min-height:0;display:flex;flex-direction:column}
+.t2-side .cmsgs{padding:10px 12px 6px}
+.t2-side .cmsg{background:var(--t-s1);border-color:var(--t-line);color:var(--t-txt);border-radius:6px 18px 18px 18px;box-shadow:none}
+.t2-side .cmsg.mine{background:var(--grad);color:var(--onacc);border-color:transparent;border-radius:18px 6px 18px 18px}
+.t2-side .cempty{color:var(--t-mut)}
+.t2-side .cbar{border-top:1px solid var(--t-line);background:rgba(5,6,13,.9)}
+.t2-side .cbar textarea{background:var(--t-s1);border:1px solid var(--t-line);color:var(--t-txt);border-radius:20px}
+.t2-side .cbar textarea:focus{border-color:var(--a1)}
+.t2-mem{flex:1;min-height:0;overflow-y:auto;padding:10px 12px 14px;display:flex;flex-direction:column;gap:7px}
+.t2-m{display:flex;align-items:center;gap:11px;padding:9px 11px;border-radius:16px;background:var(--t-s1);border:1px solid var(--t-line)}
+.t2-m .av{position:relative;flex:none;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:16px;color:#fff}
+.t2-m .av i{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#4a5272;border:2px solid var(--t-s1)}
+.t2-m .av i.on{background:#3ddc97}
+.t2-m .nm{flex:1;min-width:0}
+.t2-m .nm b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t2-m .nm small{color:var(--t-mut);font-size:11.5px}
+.t2-m .bd{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:800;vertical-align:1px;background:var(--grad);color:var(--onacc)}
+.t2-m .bd.vip{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00}
+.t2-m .bd.adm{background:rgba(120,100,255,.25);color:#c3b5ff}
+.t2-m .kick{flex:none;width:36px;height:36px;border-radius:12px;background:rgba(255,59,48,.12);border:1px solid rgba(255,59,48,.4);color:#ff6b62;display:flex;align-items:center;justify-content:center}
+.t2-m .kick svg{width:18px;height:18px}
+.t2-m .kick:active{background:rgba(255,59,48,.3)}
+.t2-memhd{padding:2px 4px 4px;color:var(--t-mut);font-size:12px}
+.ginfo .gr{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--t-line);font-size:14px}
+.t2-link-in{width:100%;margin-top:10px;font-size:13.5px;text-align:center}
+.t2-inv-act{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:12px}
+.t2-inv-act .t2-cta{width:100%;padding:13px 8px;font-size:14.5px}
+@media(min-width:900px){
+  .th-body.hall-mode{max-width:1320px;margin:0 auto;width:100%}
+  .t2-hall{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:0 18px;padding:0 18px 18px}
+  .t2-main{overflow-y:auto;min-height:0}
+  .t2-side{border:1px solid var(--t-line);border-radius:22px;overflow:hidden}
+  .t2-wrap{max-width:900px}
+  .t2-hero h2{font-size:44px}.t2-hero-poster{width:150px}
+  .t2-actions{grid-template-columns:1fr 1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .th *,.th *::before,.th *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .t2-rxl span{animation:none;opacity:0}
+}
 /* ── Moderatsiya ── */
 .cdots{display:inline-flex;align-items:center;justify-content:center;width:26px;height:18px;opacity:.7;color:inherit}
 .cdots svg{width:18px;height:18px}
@@ -501,15 +696,9 @@ textarea.inp{min-height:96px;resize:vertical;line-height:1.4}
 #favbtn .si{width:21px;height:21px;vertical-align:middle}
 #favbtn.on .fv{fill:url(#ga)}
 #sortbtn .si{width:15px;height:15px;vertical-align:-3px}
-.th-title .si{width:20px;height:20px;vertical-align:-4px}
-.th-back .si{width:20px;height:20px;vertical-align:middle}
 .rib .si{width:11px;height:11px;margin-right:2px;vertical-align:-1.5px}
 .tag .si{width:13px;height:13px;margin-right:3px;vertical-align:-2px}
 .vipbox .vcrown .si{width:68px;height:68px}
-.th-chip .si{width:15px;height:15px;vertical-align:-3px}
-.th-chip.gh{color:#c3b5ff;border-color:rgba(160,140,255,.5);background:rgba(120,100,255,.14)}
-.pl .tm .si{width:22px;height:22px}
-.pl .st .si{width:13px;height:13px;vertical-align:-2px}
 
 /* ── Kinematografik fon (asosiy dizayn) ── */
 html:not([data-theme]){
@@ -3010,10 +3199,15 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   document.addEventListener('visibilitychange', () => { if (!document.hidden && CH.open) chatPoll(false).then(chatTick); });
 
   /* ───────── Teatr ───────── */
-  const TH = { on: false, stack: [], hall: null };
+  const TH = { on: false, stack: [], hall: null, timers: [] };
   const TAGS = { film: '🎬 Kino', toon: '🧸 Multfilm', serial: '📺 Serial', premiere: '⭐ Premyera' };
+  const REACTS = ['🔥', '😂', '😮', '\u2764\ufe0f', '👏'];
   const thName = m => m ? m.title + (m.ep ? ' · ' + m.ep + '-qism' : '') : '';
   const thCount = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60); return (h ? h + ':' + String(m).padStart(2, '0') : String(m)) + ':' + String(s % 60).padStart(2, '0'); };
+  const thArt = (m, id) => ({ t: m && m.art ? m.art.t : 'm', id: m && m.art ? m.art.id : (id || (m && m.id) || 0), cv: m && m.art ? m.art.cv : '' });
+  const thPoster = (m, id) => posterBox(thArt(m, id));
+  const thTag = t => (TAGS[t] || '').replace(/^\S+\s/, '');
+  const thClock = (to, srv) => { const left = to - srv; return left > 0 ? thCount(left) : '0:00'; };
 
   function thModal(title, onClose) {
     const wrap = el('div', 'thm'), box = el('div', 'thm-box'), hd = el('div', 'thm-hd');
@@ -3032,20 +3226,66 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       i.style.marginTop = '10px';
       const ok = () => { const v = i.value.trim(); if (!v) return; fin(v); m.close(); };
       i.addEventListener('keydown', e => { if (e.key === 'Enter') ok(); });
-      const b = mkBtn('btn main full', 'Davom etish', ok); b.style.marginTop = '12px';
+      const b = mkBtn('t2-cta t2-big', 'Davom etish', ok);
       m.box.append(i, b); setTimeout(() => i.focus(), 150);
     });
+  }
+  function thConfirm(title, text, okText) {
+    return new Promise(res => {
+      let done = false; const fin = v => { if (!done) { done = true; res(v); } };
+      const m = thModal(title, () => fin(false));
+      m.box.appendChild(el('div', 'note', text)).style.margin = '8px 0 4px';
+      const row = el('div', 't2-inv-act');
+      row.append(mkBtn('t2-cta ghost', 'Bekor qilish', () => m.close()), mkBtn('t2-cta', okText || 'Ha', () => { fin(true); m.close(); }));
+      m.box.appendChild(row);
+    });
+  }
+  const thErr = (e, retry) => {
+    const c = el('div', 't2-empty'); c.appendChild(el('div', 'e', '📡')); c.appendChild(el('b', '', 'Ulanib bo\'lmadi'));
+    c.appendChild(el('div', '', errMsg(e))); if (retry) c.appendChild(mkBtn('t2-cta', '↻ Qayta urinish', retry)); return c;
+  };
+
+  /* ── Eslatma (seansdan 10 daqiqa oldin Telegramga xabar) ── */
+  function thWriteAccess() {
+    return new Promise(res => {
+      try {
+        const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+        if (!tg.requestWriteAccess || (u && u.allows_write_to_pm)) return res(true);
+        tg.requestWriteAccess(ok => res(!!ok));
+      } catch (e) { res(true); }
+    });
+  }
+  function thBell(item) {
+    const b = el('button', 't2-bell'); b.setAttribute('aria-label', 'Eslatma');
+    const paint = pop => { b.classList.toggle('on', !!item.remind); b.textContent = item.remind ? '🔔 Yoqilgan' : '🔔 Eslat'; if (pop) { b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop'); } };
+    paint(false);
+    b.onclick = async ev => {
+      ev.stopPropagation(); if (b.disabled) return;
+      const want = !item.remind; b.disabled = true; haptic();
+      try {
+        const okW = want ? await thWriteAccess() : true;
+        const r = await api('/api/theatre/remind', { start: item.start, on: want });
+        item.remind = !!r.on; paint(true);
+        if (r.on) toast(okW ? '🔔 Eslatma yoqildi: seansdan 10 daqiqa oldin xabar beramiz' : '⚠️ Eslatma yoqildi, lekin botga yozish ruxsati yo\'q. Botda /start bosing', 3600);
+        else toast('Eslatma o\'chirildi');
+      } catch (e) { toast(errMsg(e), 3200); }
+      b.disabled = false;
+    };
+    return b;
   }
 
   /* Ekranlar steki: 0-chi — bosh sahifa; orqaga bosilsa bitta qadam qaytadi, bosh sahifada yopiladi */
   function thLeaveHall() {
     const H = TH.hall; if (!H) return;
-    H.timers.forEach(clearInterval);
+    H.timers.forEach(clearInterval); clearTimeout(H.bt); clearTimeout(H.mt);
+    try { if (H.es) H.es.close(); } catch (e) {}
+    try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) {}
     try { H.video.pause(); H.video.removeAttribute('src'); H.video.load(); } catch (e) {}
     TH.hall = null;
   }
+  function thStopTimers() { TH.timers.forEach(clearInterval); TH.timers = []; }
   function thRender() {
-    thLeaveHall();
+    thLeaveHall(); thStopTimers();
     const s = TH.stack[TH.stack.length - 1];
     $('#thTitle').textContent = s.title; $('#thRight').replaceChildren();
     const body = $('#thBody'); body.replaceChildren(); body.scrollTop = 0;
@@ -3058,42 +3298,160 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   function thOpen() {
     if (!TH.on) { toast(ME && ME.admin ? 'Teatr ulanmagan: API_ID va API_HASH ni tekshiring' : 'Teatr hozircha yopiq'); return; }
     haptic();
-    TH.stack = [{ title: '🎭 Teatr', build: thHome }];
+    TH.stack = [{ title: 'Teatr', build: thHome }];
     $('#th').classList.add('on'); thRender();
     try { tg.BackButton.onClick(thBack); tg.BackButton.show(); } catch (e) {}
   }
   function thClose() {
-    thLeaveHall(); $('#th').classList.remove('on'); document.querySelectorAll('#th .thm').forEach(x => x.remove());
+    thLeaveHall(); thStopTimers(); $('#th').classList.remove('on'); document.querySelectorAll('#th .thm').forEach(x => x.remove());
     try { tg.BackButton.offClick(thBack); tg.BackButton.hide(); } catch (e) {}
+  }
+  /* Taklif havolasi (?room=KOD yoki startapp=r_KOD) yoki eslatma tugmasi (?th=pub) orqali kirish */
+  function thDeepLink() {
+    let room = '', pub = false;
+    try { const q = new URLSearchParams(location.search); room = (q.get('room') || '').toUpperCase(); pub = q.get('th') === 'pub'; } catch (e) {}
+    try { const sp = ((tg.initDataUnsafe || {}).start_param) || ''; const m = /^r_([A-Za-z0-9]{4,8})$/.exec(sp); if (m) room = m[1].toUpperCase(); else if (sp === 'th') pub = true; } catch (e) {}
+    if (!room && !pub) return;
+    if (!TH.on) { toast('Teatr hozircha yopiq'); return; }
+    thOpen();
+    if (room) thEnterRoom(room); else thGo('Ommaviy teatr', thHallPub, true);
   }
 
   /* ── Bosh sahifa ── */
   function thHome(body) {
-    const card = (ic, title, sub, fn) => {
-      const c = el('button', 'thc'); c.appendChild(el('div', 'ti', ic)); c.appendChild(el('b', '', title));
-      const s = el('span', '', sub); c.appendChild(s); c.onclick = () => { haptic(); fn(); };
-      body.appendChild(c); return s;
-    };
-    const sub1 = card('🌐', 'Ommaviy teatr', 'Hamma birga ko\'radi · har kuni 08:00–24:00', () => thGo('🌐 Ommaviy teatr', thHallPub, true));
-    api('/api/theatre/state').then(st => {
-      if (st.phase === 'live') { sub1.textContent = '🔴 Hozir: ' + thName(st.movie) + ' · 👁 ' + st.viewers; sub1.className = 'lv'; }
-      else if (st.phase === 'closed') sub1.textContent = '🌙 ' + st.opens_time + ' da ochiladi';
-      else sub1.textContent = '☕ Tanaffus' + (st.next && st.next.movie ? ' · ' + st.next.time + ' da: ' + st.next.movie.title : '');
-    }).catch(() => {});
-    body.appendChild(mkBtn('thlink', '📅 Bugungi reja', thPlan));
-    card('🏠', 'O\'z xonam', 'Do\'stlar bilan ochiq yoki parolli xona oching', () => thGo('🏠 Xonalar', thRooms));
-    if (ME && ME.admin && can('publish')) {
-      card('⭐', 'Premyera (admin)', 'Kinoni ertaga teatrda birinchi bo\'lib ko\'rsating', () => thGo('⭐ Premyera', thPremiere));
-      body.appendChild(mkBtn('thlink', '🔄 Rejani qayta tuzish (serial 1-qismdan)', async () => {
-        if (!confirm('Bugungi reja qayta tuziladi va serial 1-qismdan boshlanadi. Davom etilsinmi?')) return;
-        try { const r = await api('/api/admin/theatre/rebuild', {}); haptic('medium'); toast('✅ Reja qayta tuzildi (' + r.slots + ' slot)', 2600); }
-        catch (e) { toast(errMsg(e), 3200); }
-      }));
+    const wrap = el('div', 't2-wrap'); body.appendChild(wrap);
+    const S = { d: null, off: 0 };
+    const skel = () => { wrap.replaceChildren(); [190, 60, 60, 60].forEach(h => { const s = el('div', 't2-sk'); s.style.height = h + 'px'; s.style.marginTop = '12px'; wrap.appendChild(s); }); };
+    const srv = () => Date.now() / 1000 + S.off;
+    let tickFns = [];
+
+    function hero(d) {
+      const st = d.state, live = st.phase === 'live' && st.movie;
+      const nx = st.next && st.next.movie ? st.next : null;
+      const mv = live ? st.movie : (nx ? nx.movie : null);
+      const c = el('div', 't2-hero t2-in');
+      if (!mv) {
+        c.appendChild(el('div', 't2-empty', '')).replaceChildren(el('div', 'e', '🎞'), el('b', '', 'Hozircha efir yo\'q'), el('div', '', 'Kinolar tayyor bo\'lgach teatr o\'zi ishga tushadi'));
+        c.style.border = '0'; return c;
+      }
+      const bg = el('div', 't2-hero-bg'); bg.appendChild(thPoster(mv)); c.appendChild(bg);
+      const inn = el('div', 't2-hero-in'), pw = el('div', 't2-hero-poster'); pw.appendChild(thPoster(mv)); pw.onclick = enter;
+      const tx = el('div', 't2-hero-tx');
+      const lv = el('div', 't2-live' + (live ? '' : ' idle'));
+      lv.append(el('span', 't2-dot'), document.createTextNode(live ? 'HOZIR EFIRDA' : st.phase === 'closed' ? 'TEATR YOPIQ · KEYINGI SEANS' : 'TANAFFUS · KEYINGI SEANS'));
+      tx.appendChild(lv); tx.appendChild(el('h2', '', thName(mv)));
+      const meta = el('div', 't2-meta');
+      const tg0 = live ? st.slot.tag : nx.tag;
+      if (tg0) meta.appendChild(el('span', 't2-tag' + (tg0 === 'premiere' ? ' pr' : ''), thTag(tg0) || TAGS[tg0]));
+      if (mv.year) meta.appendChild(el('span', '', mv.year));
+      const vw = el('span', '', '');
+      if (live) { vw.textContent = '👁 ' + st.viewers + ' tomoshabin'; meta.appendChild(vw); } else { const cd = el('span', ''); meta.appendChild(el('span', '', (nx.time) + ' da')); meta.appendChild(cd); tickFns.push(() => { cd.textContent = '· ' + thClock(nx.start, srv()) + ' qoldi'; }); }
+      tx.appendChild(meta); inn.append(pw, tx); c.appendChild(inn);
+      const ft = el('div', 't2-hero-ft');
+      if (live && mv.duration) {
+        const bar = el('div', 't2-bar'), fill = el('i'); bar.appendChild(fill); ft.appendChild(bar);
+        tickFns.push(() => { fill.style.width = Math.max(0, Math.min(100, (srv() - st.start) / mv.duration * 100)) + '%'; });
+      }
+      const row = el('div', 't2-ft-row');
+      row.appendChild(mkBtn('t2-cta', live ? '▶ Qo\'shilish' : '🚪 Zalga kirish', enter));
+      const g = el('div', 'grow'); row.appendChild(g);
+      if (live && st.next && st.next.movie) g.textContent = 'Keyingi: ' + st.next.time + ' · ' + thName(st.next.movie);
+      else if (!live) g.textContent = st.phase === 'closed' ? '08:00 dan 24:00 gacha ochiq' : 'Tanaffus tugagach boshlanadi';
+      if (!live && nx) { const it = d.plan.items.find(i => i.start === nx.start && i.state === 'next' && i.movie); if (it) row.appendChild(thBell(it)); }
+      ft.appendChild(row); c.appendChild(ft);
+      function enter() { haptic('medium'); thGo('Ommaviy teatr', thHallPub, true); }
+      return c;
     }
+    function schedule(d) {
+      const g = el('div', 't2-sched');
+      d.plan.items.forEach((i, k) => {
+        const r = el('div', 't2-row t2-in ' + i.state); r.style.animationDelay = Math.min(k, 8) * 35 + 'ms';
+        r.appendChild(el('div', 'tm', i.time));
+        const th = el('div', 'th2'); if (i.movie) th.appendChild(thPoster(i.movie)); r.appendChild(th);
+        const tx = el('div', 'tx'); tx.appendChild(el('b', '', i.movie ? thName(i.movie) : '— reja yo\'q —'));
+        tx.appendChild(el('span', '', i.movie ? (TAGS[i.tag] || '') : '')); r.appendChild(tx);
+        const rt = el('div');
+        if (i.state === 'now') { const s = el('div', 't2-st'); s.innerHTML = '<span class="t2-eq"><i></i><i></i><i></i></span>EFIRDA'; rt.appendChild(s); r.onclick = () => { haptic(); thGo('Ommaviy teatr', thHallPub, true); }; r.style.cursor = 'pointer'; }
+        else if (i.state === 'done') rt.appendChild(el('div', 't2-st', '✓'));
+        else if (i.movie) rt.appendChild(thBell(i));
+        r.appendChild(rt); g.appendChild(r);
+      });
+      return g;
+    }
+    function premiereModal(p) {
+      const m = thModal('Premyera');
+      const det = el('div', 't2-det'), pc = el('div', 'pc'); pc.appendChild(thPoster({ art: p.art, id: p.id })); det.appendChild(pc);
+      const t = el('div'); t.appendChild(el('h4', '', p.title));
+      const mt = el('div', 't2-meta'); mt.appendChild(el('span', 't2-tag pr', '⭐ ' + p.day.toUpperCase() + ' · ' + p.time));
+      [p.year, p.quality, p.country].filter(Boolean).forEach(x => mt.appendChild(el('span', 't2-tag', x)));
+      if (p.duration) mt.appendChild(el('span', 't2-tag', Math.round(p.duration / 60) + ' daq'));
+      t.appendChild(mt); if (p.genre) t.appendChild(el('p', '', p.genre)); if (p.desc) t.appendChild(el('p', '', p.desc));
+      det.appendChild(t); m.box.appendChild(det);
+      const b = thBell(p); b.classList.add('t2-big'); b.style.justifyContent = 'center'; b.style.minHeight = '48px'; m.box.appendChild(b);
+      m.box.appendChild(el('div', 'note', 'Premyera boshlanishidan 10 daqiqa oldin Telegramga xabar yuboramiz. Tugagach kino katalogga qo\'shiladi.')).style.marginTop = '10px';
+    }
+    function premieres(d) {
+      const sc = el('div', 't2-prem');
+      d.premieres.forEach(p => {
+        const c = el('button', 't2-pc t2-in'), im = el('div', 't2-pc-img'); im.appendChild(thPoster({ art: p.art, id: p.id }));
+        im.appendChild(el('span', 't2-pc-star', '⭐ PREMYERA'));
+        const w = el('div', 't2-pc-when'); w.appendChild(el('small', '', p.day.toUpperCase())); w.appendChild(document.createTextNode(p.time)); im.appendChild(w); c.appendChild(im);
+        const bd = el('div', 't2-pc-bd'); bd.appendChild(el('b', '', p.title)); bd.appendChild(el('span', '', [p.year, p.genre].filter(Boolean).join(' · ') || ' ')); bd.appendChild(thBell(p)); c.appendChild(bd);
+        c.onclick = () => { haptic(); premiereModal(p); }; sc.appendChild(c);
+      });
+      return sc;
+    }
+    function rooms(d) {
+      const box = el('div');
+      const act = el('div', 't2-actions');
+      const nb = el('button', 't2-new'); nb.innerHTML = '<span class="ic">＋</span><span><b>Xona yaratish</b><small>Do\'stlar bilan ochiq yoki parolli xona</small></span>';
+      nb.onclick = () => { haptic(); thGo('Yangi xona', thCreate); };
+      const jr = el('div', 'joinrow'), ji = el('input', 'inp'); ji.placeholder = 'KOD'; ji.maxLength = 8; ji.autocomplete = 'off'; ji.autocapitalize = 'characters';
+      const go = () => { if (ji.value.trim().length >= 4) thEnterRoom(ji.value); else toast('Xona kodini kiriting (5 belgi)'); };
+      ji.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+      jr.append(ji, mkBtn('', 'Kirish', go)); act.append(nb, jr); box.appendChild(act);
+      const list = el('div', 't2-rooms'); list.style.marginTop = '12px';
+      if (!d.rooms.length) { const e = el('div', 't2-empty'); e.append(el('div', 'e', '🛋'), el('b', '', 'Hozircha ochiq xona yo\'q'), el('div', '', 'Birinchi bo\'lib oching va do\'stlaringizni taklif qiling!')); list.appendChild(e); }
+      d.rooms.forEach(r => {
+        const b = el('button', 't2-room t2-in' + (r.mine ? ' mine' : '')), th = el('div', 'th2'); th.appendChild(thPoster({ art: r.art, id: r.mid }));
+        if (r.locked) { const lk = el('span', 'lk'); lk.innerHTML = si('lock'); th.appendChild(lk); }
+        const tx = el('div', 'tx'); tx.appendChild(el('b', '', r.title)); tx.appendChild(el('span', '', '🎬 ' + r.movie + ' · 👤 ' + r.owner));
+        const vw = el('div', 'vw'); vw.innerHTML = ((ME.role === 'owner' && !r.mine) ? si('ghost') + ' ' : '') + '👁 ' + r.viewers;
+        b.append(th, tx, vw); b.onclick = () => { haptic(); thEnterRoom(r.id); }; list.appendChild(b);
+      });
+      box.appendChild(list); return box;
+    }
+    const sec = (t, small, node) => { const h = el('div', 't2-sec'); h.appendChild(el('h3', '', t)); if (small) h.appendChild(typeof small === 'string' ? el('small', '', small) : small); wrap.append(h, node); };
+
+    function render() {
+      const d = S.d; tickFns = []; S.off = d.state.now - Date.now() / 1000;
+      wrap.replaceChildren(); wrap.appendChild(hero(d));
+      sec('Bugungi efir jadvali', '08:00 – 24:00', schedule(d));
+      if (d.premieres.length) sec('Premyeralar', 'Tez orada', premieres(d));
+      sec('Shaxsiy xonalar', d.rooms.length ? d.rooms.length + ' ta ochiq' : '', rooms(d));
+      if (ME && ME.admin && can('publish')) {
+        const ad = el('div'); ad.style.display = 'grid'; ad.style.gap = '9px';
+        ad.appendChild(mkBtn('thlink', '⭐ Premyera belgilash (admin)', () => thGo('Premyera', thPremiere)));
+        ad.appendChild(mkBtn('thlink', '🔄 Rejani qayta tuzish (serial 1-qismdan)', async () => {
+          if (!confirm('Bugungi reja qayta tuziladi va serial 1-qismdan boshlanadi. Davom etilsinmi?')) return;
+          try { const r = await api('/api/admin/theatre/rebuild', {}); haptic('medium'); toast('✅ Reja qayta tuzildi (' + r.slots + ' slot)', 2600); load(); }
+          catch (e) { toast(errMsg(e), 3200); }
+        }));
+        sec('Admin', '', ad);
+      }
+      tickFns.forEach(f => f());
+    }
+    async function load() {
+      try { S.d = await api('/api/theatre/home'); render(); }
+      catch (e) { if (!S.d) { wrap.replaceChildren(thErr(e, () => { skel(); load(); })); } }
+    }
+    skel(); load();
+    TH.timers.push(setInterval(() => tickFns.forEach(f => f()), 1000));
+    TH.timers.push(setInterval(() => { if (!document.hidden && !document.querySelector('#th .thm')) load(); }, 20000));
   }
 
   async function thPlan() {
-    const m = thModal('📅 Bugungi reja'); m.box.appendChild(el('div', 'note', '⏳ Yuklanmoqda...'));
+    const m = thModal('Bugungi reja'); m.box.appendChild(el('div', 'note', '⏳ Yuklanmoqda...'));
     try {
       const d = await api('/api/theatre/plan'); m.box.lastChild.remove();
       if (!d.items.some(i => i.movie)) m.box.appendChild(el('div', 'note', 'Reja hali tuzilmagan yoki kinolar yetarli emas.'));
@@ -3102,7 +3460,10 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         const tx = el('div', 'tx');
         tx.appendChild(el('b', '', i.movie ? thName(i.movie) : '— reja yo\'q —'));
         tx.appendChild(el('span', '', i.movie ? (TAGS[i.tag] || '') : ''));
-        r.appendChild(tx); r.appendChild(el('div', 'st', i.state === 'now' ? '🔴 Hozir' : i.state === 'done' ? '✅' : '⏳'));
+        r.appendChild(tx);
+        if (i.state === 'next' && i.movie) r.appendChild(thBell(i)); else r.appendChild(el('div', 'st', i.state === 'now' ? '🔴 Hozir' : '✓'));
+        if (i.state === 'now') r.style.borderColor = 'var(--a1)';
+        if (i.state === 'done') r.style.opacity = '.5';
         m.box.appendChild(r);
       });
       m.box.appendChild(el('div', 'note', 'Reja har kuni 00:00 da yangilanadi. Har bir kino 2 soatlik slotda boshlanadi.')).style.marginTop = '12px';
@@ -3111,16 +3472,17 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
 
   /* ── Chat (zal ichida) ── */
   function thChat(wrap, room, ghost) {
-    const C = { last: 0, key: '', busy: false };
+    const C = { last: 0, key: '', busy: false, at: 0 };
     const msgs = el('div', 'cmsgs'), bar = el('div', 'cbar');
     const ta = el('textarea'); ta.rows = 1; ta.maxLength = 300; ta.placeholder = 'Chatga yozing...'; ta.enterKeyHint = 'send';
-    const send = mkBtn('csend', '', () => doSend()); send.innerHTML = si('send');
+    const send = mkBtn('csend', '', () => doSend()); send.innerHTML = si('send'); send.setAttribute('aria-label', 'Yuborish');
     bar.append(ta, send); wrap.append(msgs, bar);
     if (ghost) bar.hidden = true;  // 👻 sharpa rejimida yozilmaydi
     const empty = () => { if (!msgs.children.length) { const e = el('div', 'cempty'); e.id = 'thempty'; e.appendChild(el('div', 'e', '🍿')); e.appendChild(el('div', '', 'Hali xabar yo\'q. Birinchi bo\'lib yozing!')); msgs.appendChild(e); } };
     const bubble = m => {
-      const b = el('div', 'cmsg' + (m.mine ? ' mine' : ''));
-      if (!m.mine) {
+      const mine = m.uid === CH.uid;
+      const b = el('div', 'cmsg' + (mine ? ' mine' : '')); b.dataset.id = m.id;
+      if (!mine) {
         const n = el('div', 'cn'); n.style.color = 'hsl(' + nameHue(m.uid) + ',75%,68%)'; n.appendChild(el('span', '', m.name));
         if (m.staff) n.appendChild(el('span', 'adm-b', 'ADMIN')); else if (m.vip) n.appendChild(el('span', 'adm-b vip', 'VIP')); b.appendChild(n);
       }
@@ -3136,11 +3498,13 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     const add = (items, force) => {
       if (!items.length) return;
       const near = force || msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight < 90;
-      const ce = $('#thempty'); if (ce) ce.remove();
+      const ce = msgs.querySelector('#thempty'); if (ce) ce.remove();
       items.forEach(m => { if (m.id > C.last) { msgs.appendChild(bubble(m)); C.last = m.id; } });
+      while (msgs.children.length > 150) msgs.firstChild.remove();
       if (near) msgs.scrollTop = msgs.scrollHeight;
     };
     C.poll = async first => {
+      C.at = Date.now();
       try {
         const d = await api('/api/theatre/chat?room=' + encodeURIComponent(room) + '&after=' + (first ? 0 : C.last));
         if (C.key && d.key !== C.key) { C.key = d.key; msgs.replaceChildren(); C.last = 0; if (!first) return C.poll(true); }
@@ -3149,6 +3513,13 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         add(d.items, first); if (first) empty();
       } catch (e) {}
     };
+    /* Real vaqt: server yuborgan xabar */
+    C.push = d => {
+      if (C.key && d.key !== C.key) { C.key = d.key; msgs.replaceChildren(); C.last = 0; C.poll(true); return; }
+      if (!C.key) C.key = d.key;
+      add([d.item], d.item.uid === CH.uid);
+    };
+    C.remove = id => { const n = msgs.querySelector('[data-id="' + id + '"]'); if (n) { n.remove(); empty(); } };
     async function doSend() {
       const text = ta.value.trim(); if (!text || C.busy) return;
       C.busy = true; send.disabled = true;
@@ -3161,37 +3532,135 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     return C;
   }
 
+  /* ── Ishtirokchilar (xona ichida) ── */
+  function thMembers(pane, rid, onCount) {
+    const M = { at: 0, busy: false, vis: false };
+    const list = el('div', 't2-mem'); pane.appendChild(list);
+    const draw = d => {
+      list.replaceChildren(); onCount(d.total);
+      list.appendChild(el('div', 't2-memhd', '🟢 Hozir xonada: ' + d.viewers + ' · jami: ' + d.total));
+      d.items.forEach(u => {
+        const r = el('div', 't2-m t2-in'), av = el('div', 'av'); av.style.background = 'hsl(' + nameHue(u.id) + ',55%,42%)';
+        av.textContent = (u.name || '?').trim().charAt(0).toUpperCase(); av.appendChild(el('i', u.online ? 'on' : ''));
+        const nm = el('div', 'nm'), b = el('b', '', u.name);
+        if (u.host) b.appendChild(el('span', 'bd', '👑 EGA')); else if (u.staff) b.appendChild(el('span', 'bd adm', 'ADMIN')); else if (u.vip) b.appendChild(el('span', 'bd vip', 'VIP'));
+        nm.appendChild(b); nm.appendChild(el('small', '', u.id === d.me ? 'Siz' : u.online ? 'Onlayn' : 'Oflayn'));
+        r.append(av, nm);
+        if (d.can_kick && !u.host && u.id !== d.me && !(u.staff && ME.role !== 'owner')) {
+          const k = el('button', 'kick'); k.setAttribute('aria-label', 'Xonadan chiqarish'); k.innerHTML = ICON.ban;
+          k.onclick = async () => {
+            if (!await thConfirm('Xonadan chiqarish', '«' + u.name + '» xonadan chiqariladi va qayta kira olmaydi. Davom etilsinmi?', 'Chiqarish')) return;
+            try { await api('/api/theatre/room/' + rid + '/kick', { uid: u.id }); haptic('medium'); toast('Chiqarildi: ' + u.name); M.refresh(); }
+            catch (e) { toast(errMsg(e), 3200); }
+          };
+          r.appendChild(k);
+        }
+        list.appendChild(r);
+      });
+    };
+    M.refresh = async () => {
+      if (M.busy) return; M.busy = true; M.at = Date.now();
+      try { draw(await api('/api/theatre/room/' + rid + '/members')); } catch (e) { if (!list.children.length) list.appendChild(el('div', 'note', errMsg(e))); }
+      M.busy = false;
+    };
+    M.soon = () => { if (!M.vis) { M.dirty = true; return; } clearTimeout(M.t); M.t = setTimeout(M.refresh, 500); };
+    return M;
+  }
+
+  /* ── Taklif havolasi (xona egasi) ── */
+  async function thInvite(rid) {
+    const m = thModal('Do\'stlarni taklif qilish'); m.box.appendChild(el('div', 'note', '⏳ Havola tayyorlanmoqda...'));
+    try {
+      const d = await api('/api/theatre/room/' + rid + '/invite'); m.box.lastChild.remove();
+      m.box.appendChild(el('div', 'note', 'Havola orqali kirgan do\'stingiz to\'g\'ridan-to\'g\'ri shu xonaga tushadi.'));
+      const i = el('input', 'inp t2-link-in'); i.readOnly = true; i.value = d.link; i.onfocus = () => i.select(); m.box.appendChild(i);
+      if (d.locked) m.box.appendChild(el('div', 'note', '🔒 Xona parolli: parol havolada yo\'q. Uni do\'stlaringizga o\'zingiz ayting — parolsiz kira olmaydilar.')).style.marginTop = '10px';
+      const act = el('div', 't2-inv-act');
+      act.append(
+        mkBtn('t2-cta', '📤 Ulashish', () => { haptic('medium'); try { tg.openTelegramLink(d.share); } catch (e) { window.open(d.share, '_blank'); } }),
+        mkBtn('t2-cta ghost', '📋 Nusxalash', async () => {
+          let ok = false;
+          try { await navigator.clipboard.writeText(d.link); ok = true; } catch (e) { try { i.select(); ok = document.execCommand('copy'); } catch (e2) {} }
+          toast(ok ? 'Havola nusxalandi' : 'Havolani qo\'lda belgilab nusxalang');
+        }));
+      m.box.appendChild(act);
+    } catch (e) { m.box.lastChild.textContent = errMsg(e); }
+  }
+
   /* ── Zal (ommaviy va xona uchun umumiy) ── */
   function thHall(body, cfg) {
-    const pub = cfg.mode === 'pub';
-    const H = TH.hall = { cfg, started: !!cfg.host, mid: 0, slotKey: '', startTs: 0, offset: 0, base: null, timers: [], cd: null, info: null };
-    const hall = el('div', 'hall'); body.appendChild(hall);
-    const stage = el('div', 'stage'), vbox = el('div', 'vbox' + (cfg.host ? '' : ' nc'));
+    const pub = cfg.mode === 'pub', host = !!cfg.host, ghost = !!cfg.ghost;
+    const H = TH.hall = { cfg, started: host, mid: 0, slotKey: '', startTs: 0, offset: 0, base: null, timers: [], cd: null, info: null, es: null, lastPoll: 0, ovKind: '', pp: null };
+    const hall = el('div', 't2-hall'), main = el('div', 't2-main'), side = el('div', 't2-side'); hall.append(main, side); body.appendChild(hall);
+    const stage = el('div', 'stage'), vbox = el('div', 'vbox' + (host ? ' host-ctl' : ' nc'));
     const video = H.video = document.createElement('video');
     video.playsInline = true; video.setAttribute('webkit-playsinline', ''); video.preload = 'auto'; video.disablePictureInPicture = true;
-    if (cfg.host) video.controls = true;
+    if (host) video.controls = true;
     const ov = el('div', 'vov'); ov.hidden = true;
+    const rxl = el('div', 't2-rxl'), pill = el('div', 't2-sync'); pill.hidden = true;
     const ctl = el('div', 'vctl');
-    const mute = mkBtn('', '🔊', () => { video.muted = !video.muted; mute.textContent = video.muted ? '🔇' : '🔊'; });
-    const fs = mkBtn('', '⛶', () => { if (video.webkitEnterFullscreen) video.webkitEnterFullscreen(); else if (video.requestFullscreen) video.requestFullscreen(); else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen(); });
-    ctl.append(mute, fs); vbox.append(video, ov, ctl); stage.append(vbox, el('div', 'seats'));
+    const mute = mkBtn('', '🔊', () => { video.muted = !video.muted; mute.textContent = video.muted ? '🔇' : '🔊'; }); mute.setAttribute('aria-label', 'Ovoz');
+    const vfs = () => { if (video.webkitEnterFullscreen) video.webkitEnterFullscreen(); else if (video.requestFullscreen) video.requestFullscreen(); else if (video.webkitRequestFullscreen) video.webkitRequestFullscreen(); };
+    const fs = mkBtn('', '⛶', () => {
+      if (document.fullscreenElement) { document.exitFullscreen(); return; }
+      if (vbox.requestFullscreen && !/iPhone|iPad|iPod/.test(navigator.userAgent)) vbox.requestFullscreen().catch(vfs); else vfs();
+    }); fs.setAttribute('aria-label', 'To\'liq ekran');
+    ctl.append(mute, fs); vbox.append(video, ov, rxl, pill, ctl); stage.append(vbox, el('div', 'seats'));
     const info = el('div', 'hinfo'), nm = el('div', 'nm'), sm = el('div', 'sm'); info.append(nm, sm);
-    const chatWrap = el('div', 'hchat');
-    hall.append(stage, info, chatWrap);
-    const chat = thChat(chatWrap, pub ? 'pub' : cfg.room, !!cfg.ghost);
+    main.append(stage, info);
+
+    /* Reaksiyalar: o'zimiznikini darrov ko'rsatamiz, boshqalarniki serverdan paket bo'lib keladi */
+    const spawn = e => {
+      if (document.hidden || rxl.childElementCount > 24) return;
+      const s = el('span', '', e); s.style.left = (58 + Math.random() * 36) + '%'; s.style.setProperty('--dx', (Math.random() * 70 - 35) + 'px');
+      s.addEventListener('animationend', () => s.remove()); setTimeout(() => s.remove(), 2700); rxl.appendChild(s);
+    };
+    const rxIn = d => {
+      if (!d) return; let k = 0;
+      (d.i || []).forEach(([u, e]) => { if (u !== CH.uid) setTimeout(() => spawn(e), 70 * k++); });
+      Object.entries(d.m || {}).forEach(([e, n]) => { for (let j = 0; j < Math.min(n, 4); j++) setTimeout(() => spawn(e), 70 * k++); });
+    };
+    if (!ghost) {
+      const rx = el('div', 't2-rx'); let lastRx = 0;
+      REACTS.forEach(e => {
+        const b = mkBtn('', e, () => {
+          const t = Date.now(); if (t - lastRx < 650) return; lastRx = t;
+          haptic(); spawn(e); b.classList.remove('pop'); void b.offsetWidth; b.classList.add('pop');
+          rx.classList.add('cd'); rx.querySelectorAll('button').forEach(x => x.classList.add('cd')); setTimeout(() => rx.querySelectorAll('button').forEach(x => x.classList.remove('cd')), 650);
+          api('/api/theatre/react', { room: pub ? 'pub' : cfg.room, emoji: e }).catch(() => {});
+        }); b.setAttribute('aria-label', 'Reaksiya ' + e); rx.appendChild(b);
+      });
+      rx.appendChild(el('div', 'sp'));
+      if (host && !pub) { const iv = el('button', 'inv'); iv.innerHTML = '👥 Taklif'; iv.onclick = () => { haptic(); thInvite(cfg.room); }; rx.appendChild(iv); }
+      main.appendChild(rx);
+    }
+
+    /* Yon panel: chat (+ xonada ishtirokchilar) */
+    const chatWrap = el('div', 'hchat'); let mem = null, memPane = null;
+    if (pub) { const p = el('div', 't2-pane on'); p.appendChild(chatWrap); side.appendChild(p); }
+    else {
+      const tabs = el('div', 't2-tabs'), pc = el('div', 't2-pane on'), pm = el('div', 't2-pane'); memPane = pm;
+      const tc = mkBtn('on', '💬 Chat', () => pick(true)), tm = mkBtn('', '', () => pick(false)); tm.append('👥 Ishtirokchilar', el('span', 'n', '·'));
+      const cnt = n => { tm.querySelector('.n').textContent = n; };
+      const pick = c => { tc.classList.toggle('on', c); tm.classList.toggle('on', !c); pc.classList.toggle('on', c); pm.classList.toggle('on', !c); mem.vis = !c; if (!c && (mem.dirty || !mem.at || Date.now() - mem.at > 4000)) { mem.dirty = false; mem.refresh(); } };
+      tabs.append(tc, tm); pc.appendChild(chatWrap); side.append(tabs, pc, pm);
+      mem = thMembers(pm, cfg.room, cnt); mem.refresh();
+    }
+    const chat = thChat(chatWrap, pub ? 'pub' : cfg.room, ghost);
 
     const viewers = el('div', 'th-chip', '👁 0'); $('#thRight').appendChild(viewers);
+    const setViewers = n => { viewers.textContent = '👁 ' + n; };
     if (pub) $('#thRight').appendChild(mkBtn('th-chip', '📅', thPlan));
     else {
       $('#thRight').appendChild(mkBtn('th-chip', '#' + cfg.room, () => { try { navigator.clipboard.writeText(cfg.room); } catch (e) {} toast('Xona kodi nusxalandi: ' + cfg.room, 2600); }));
-      if (cfg.ghost) {
+      if (ghost) {
         const g = el('div', 'th-chip gh'); g.innerHTML = si('ghost') + ' Sharpa'; $('#thRight').appendChild(g);
         const inf = el('button', 'th-chip'); inf.innerHTML = si('users'); inf.setAttribute('aria-label', 'Xona haqida'); inf.onclick = () => thGhostInfo(cfg.room); $('#thRight').appendChild(inf);
       }
-      if (cfg.host || cfg.ghost) {
+      if (host || ghost) {
         const tb = el('button', 'th-chip'); tb.innerHTML = si('trash'); tb.setAttribute('aria-label', 'Xonani yopish');
         tb.onclick = async () => {
-          if (!confirm(cfg.ghost ? 'Xona yopilsinmi? Ichidagilar chiqarib yuboriladi.' : 'Xona yopilsinmi?')) return;
+          if (!await thConfirm('Xonani yopish', ghost ? 'Xona yopilsinmi? Ichidagilar chiqarib yuboriladi.' : 'Xona yopilsa, hamma chiqarib yuboriladi. Davom etilsinmi?', 'Yopish')) return;
           try { await api('/api/theatre/room/' + cfg.room + '/delete', {}); toast('Xona yopildi'); thBack(); } catch (e) { toast(errMsg(e)); }
         };
         $('#thRight').appendChild(tb);
@@ -3201,7 +3670,9 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     const srv = () => Date.now() / 1000 + H.offset;
     const expected = () => pub ? srv() - H.startTs : (H.base ? H.base.pos + (H.base.playing ? srv() - H.base.now : 0) : 0);
     const seekTo = t => { try { const d = video.duration; video.currentTime = Math.max(0, isFinite(d) ? Math.min(t, d - 0.5) : t); } catch (e) {} };
-    const play = () => { const p = video.play(); if (p && p.catch) p.catch(() => { if (!cfg.host) { H.started = false; setOv('start'); } }); };
+    const play = () => { const p = video.play(); if (p && p.catch) p.catch(() => { if (!host) { H.started = false; setOv('start'); } }); };
+    const live = () => H.es && H.es.readyState === 1;
+    const stale = (at, base) => Date.now() - at > (live() ? 20000 : base);   // real vaqt ulangan bo'lsa so'rovlar kam
 
     const bufPct = () => {
       if (!video.src) return 0;
@@ -3214,14 +3685,20 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       if (!H.pp) return; const p = bufPct();
       H.pp.textContent = p >= 100 ? '✅ Video tayyor' : '⏳ Video tayyorlanmoqda: ' + p + '%';
     };
+    function setPill() {
+      if (!H.started || !H.mid || !ov.hidden) { pill.hidden = true; return; }
+      pill.hidden = false; const warn = !pub && !host && H.base && !H.base.playing;
+      pill.className = 't2-sync' + (warn ? ' warn' : '');
+      pill.innerHTML = '<span class="d"></span>' + (host ? 'Siz boshqarasiz' : pub ? 'Hamma bilan sinxron' : warn ? 'Xona egasi pauza qildi' : 'Xona egasi bilan sinxron');
+    }
     function setOv(kind, d) {
       H.cd = null; H.pp = null; H.ovKind = kind;
-      if (!kind) { ov.hidden = true; return; }
-      ov.hidden = false; ov.replaceChildren();
+      if (!kind) { ov.hidden = true; setPill(); return; }
+      ov.hidden = false; ov.replaceChildren(); pill.hidden = true;
       const add = (tag, cls, txt) => { const e = el(tag, cls, txt); ov.appendChild(e); return e; };
       if (kind === 'start') {
         add('div', 'big', '🎬'); add('b', '', thName(H.info) || 'Kino tayyor');
-        const mm = add('small', '', pub ? 'Hozirgi daqiqadan qo\'shilasiz' : 'Xona egasi qachon qo\'ysa, birga ko\'rasiz');
+        add('small', '', pub ? 'Hozirgi daqiqadan qo\'shilasiz' : 'Xona egasi qachon qo\'ysa, birga ko\'rasiz');
         H.pp = add('small', '', ''); updProg();
         const b = el('button', 'vplay', '▶ Tomosha boshlash'); b.onclick = () => { haptic('medium'); start(); }; ov.appendChild(b);
       } else if (kind === 'closed' || kind === 'break') {
@@ -3250,10 +3727,10 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     function head(m, tag) {
       nm.replaceChildren(); nm.appendChild(document.createTextNode('🎬 ' + thName(m)));
       if (tag === 'premiere') nm.appendChild(el('span', 'ptag', '⭐ PREMYERA'));
-      else if (tag && TAGS[tag]) nm.appendChild(el('span', 'ptag', TAGS[tag].replace(/^\S+\s/, '')));
+      else if (tag && TAGS[tag]) nm.appendChild(el('span', 'ptag', thTag(tag)));
     }
     function sync() {
-      if (!H.started || !H.mid || cfg.host) return;
+      if (!H.started || !H.mid || host) return;
       if (pub || (H.base && H.base.playing)) {
         if (video.readyState >= 1 && Math.abs(video.currentTime - expected()) > (pub ? 4 : 2.5)) seekTo(expected());
         if (video.paused && !video.ended) play();
@@ -3261,13 +3738,17 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         if (!video.paused) video.pause();
         if (Math.abs(video.currentTime - H.base.pos) > 1) seekTo(H.base.pos);
       }
+      setPill();
     }
 
     /* Ommaviy teatr: server jadvali bo'yicha */
     async function pollPub() {
+      if (TH.hall !== H) return;
+      H.lastPoll = Date.now(); clearTimeout(H.bt);
       try {
         const st = await api('/api/theatre/state?w=1');
-        H.offset = st.now - Date.now() / 1000; viewers.textContent = '👁 ' + st.viewers;
+        if (TH.hall !== H) return;
+        H.offset = st.now - Date.now() / 1000; setViewers(st.viewers);
         if (st.phase === 'live') {
           H.startTs = st.start; H.info = st.movie; head(st.movie, st.slot.tag);
           sm.textContent = st.next && st.next.movie ? 'Keyingi: ' + st.next.time + ' · ' + thName(st.next.movie) + (st.prep != null ? (st.prep >= 100 ? ' · ✅ tayyor' : ' · ⏳ ' + st.prep + '%') : '') : (st.last ? 'Bugungi oxirgi kino' : '');
@@ -3280,23 +3761,30 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
           else if (!st.slot.movie && !n) { sm.textContent = ''; setOv('empty'); }
           else { sm.textContent = ''; setOv('break', { to: st.next ? st.next.start : st.end, title: n ? thName(n.movie) : '', time: n ? n.time : '', prep: st.prep }); }
         }
+        /* Keyingi seans chegarasida qayta tekshiramiz (tasodifiy kechikish bilan — server bir vaqtda ko'p so'rov olmasin) */
+        const to = st.phase === 'closed' ? st.opens : st.end;
+        if (to) H.bt = setTimeout(pollPub, Math.max(800, (to - srv()) * 1000) + Math.random() * 2500);
       } catch (e) { if (!H.mid) setOv('wait', errMsg(e)); }
     }
     /* Xona: egasi boshqaradi, qolganlar kuzatadi */
     async function pollRoom() {
+      if (TH.hall !== H) return;
+      H.lastPoll = Date.now();
       try {
         const d = await api('/api/theatre/room/' + cfg.room), r = d.room;
-        H.offset = r.now - Date.now() / 1000; viewers.textContent = '👁 ' + d.viewers;
+        if (TH.hall !== H) return;
+        H.offset = r.now - Date.now() / 1000; setViewers(d.viewers);
         H.base = { pos: r.pos, now: r.now, playing: r.playing };
-        if (!H.mid) { H.mid = r.movie.id; H.info = r.movie; head(r.movie, ''); sm.textContent = '🏠 ' + r.title + ' · ' + r.owner; loadVideo(r.movie.id); setOv(cfg.host ? 'wait' : 'start', 'Video tayyorlanmoqda...'); }
-        if (cfg.host) return;
+        if (!H.mid) { H.mid = r.movie.id; H.info = r.movie; head(r.movie, ''); sm.textContent = '🏠 ' + r.title + ' · ' + r.owner; loadVideo(r.movie.id); setOv(host ? 'wait' : 'start', 'Video tayyorlanmoqda...'); }
+        if (host) return;
         if (!H.started) { if (ov.hidden) setOv('start'); return; }
         sync();
       } catch (e) {
         if (e.status === 404) { stopVideo(); setOv('err', 'Xona yopilgan'); }
+        else if (e.status === 403) { stopVideo(); setOv('err', /chiqarib/.test(e.msg || '') ? 'Siz xonadan chiqarib yuborilgansiz' : 'Xonaga kirish ruxsati yo\'q'); }
       }
     }
-    if (!pub && cfg.host) {
+    if (!pub && host) {
       let t; const push = () => api('/api/theatre/room/' + cfg.room + '/state', { playing: !video.paused && !video.ended, pos: video.currentTime }).catch(() => {});
       ['play', 'pause', 'seeked'].forEach(ev => video.addEventListener(ev, () => { clearTimeout(t); t = setTimeout(push, 150); }));
       H.timers.push(setInterval(() => { if (!video.paused) push(); }, 5000));
@@ -3307,11 +3795,30 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     video.addEventListener('playing', () => { if (H.ovKind === 'wait' && H.mid) setOv(null); });
     video.addEventListener('waiting', () => { if (H.started && H.mid && !video.ended && ov.hidden) setOv('wait', 'Yuklanmoqda...'); });
 
+    /* Real vaqt oqimi (SSE). Uzilsa brauzer o'zi qayta ulanadi; rad etilsa — oddiy so'rovlar zaxira bo'lib ishlaydi */
     const poll = pub ? pollPub : pollRoom;
+    function connect() {
+      if (!window.EventSource) return;
+      let es; try { es = H.es = new EventSource('/api/theatre/events?room=' + encodeURIComponent(pub ? 'pub' : cfg.room) + '&a=' + encodeURIComponent(initData)); } catch (e) { return; }
+      const on = (n, f) => es.addEventListener(n, ev => { if (TH.hall !== H) return; let d = {}; try { d = JSON.parse(ev.data); } catch (x) {} f(d); });
+      es.onopen = () => { if (TH.hall !== H) return; chat.poll(false); if (!pub) poll(); if (mem) mem.soon(); };
+      on('hello', d => { if (d.v != null) setViewers(d.v); });
+      on('v', d => { setViewers(d.n); if (mem) mem.soon(); });
+      on('chat', d => chat.push(d));
+      on('chat_del', d => chat.remove(d.id));
+      on('rx', rxIn);
+      on('slot', () => { clearTimeout(H.bt); H.bt = setTimeout(pollPub, Math.random() * 2000); });
+      on('state', d => { if (pub || host) return; H.offset = d.now - Date.now() / 1000; H.base = { pos: d.pos, now: d.now, playing: d.playing }; sync(); });
+      on('roster', () => { if (mem) mem.soon(); });
+      on('kicked', d => { if (d.uid === CH.uid) { toast('Siz xonadan chiqarib yuborildingiz', 3800); thBack(); } else if (mem) mem.soon(); });
+      on('closed', () => { stopVideo(); setOv('err', 'Xona yopildi'); try { es.close(); } catch (e) {} toast('Xona egasi xonani yopdi', 3000); });
+    }
+
     setOv('wait', 'Zal tayyorlanmoqda...');
-    poll(); chat.poll(true);
-    H.timers.push(setInterval(poll, pub ? 5000 : 3000));
-    H.timers.push(setInterval(() => chat.poll(false), 3000));
+    poll(); chat.poll(true); connect();
+    H.timers.push(setInterval(() => { if (stale(H.lastPoll, pub ? 5000 : 3000)) poll(); }, 1000));
+    H.timers.push(setInterval(() => { if (stale(chat.at, 3000)) chat.poll(false); }, 1000));
+    if (mem) H.timers.push(setInterval(() => { if (mem.vis && !live() && Date.now() - mem.at > 15000) mem.refresh(); }, 3000));
     H.timers.push(setInterval(updProg, 500));
     H.timers.push(setInterval(() => {
       if (H.cd) { const left = H.cd.to - srv(); H.cd.node.textContent = left > 0 ? '⏱ ' + thCount(left) : 'Boshlanmoqda...'; }
@@ -3346,29 +3853,13 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       if (d.room.ghost) toast('👻 Sharpa rejimi: sizni hech kim ko\'rmaydi', 2600);
       thGo(d.room.title, b => thHall(b, { mode: 'room', room: id, host: d.room.host, ghost: d.room.ghost }), true);
     } catch (e) {
-      if (e.status === 403 || /locked/.test(e.msg || '')) {
+      if (/chiqarib/.test(e.msg || '')) toast('🚫 Siz bu xonadan chiqarib yuborilgansiz', 3800);
+      else if (e.status === 404) toast('😕 Xona topilmadi yoki yopilgan. Havola eskirgan bo\'lishi mumkin', 3800);
+      else if (e.status === 403 || /locked/.test(e.msg || '')) {
         const p = await thAsk('🔒 Xona paroli', 'Parolni kiriting', true);
-        if (p) { try { await api('/api/theatre/room/join', { id, password: p }); return thEnterRoom(id); } catch (e2) { toast(errMsg(e2), 3000); } }
-      } else toast(errMsg(e), 3000);
+        if (p) { try { await api('/api/theatre/room/join', { id, password: p }); return thEnterRoom(id); } catch (e2) { toast(errMsg(e2), 3200); } }
+      } else toast(errMsg(e), 3200);
     }
-  }
-  function thRooms(body) {
-    const nb = mkBtn('btn main full', '➕ Xona yaratish', () => { haptic(); thGo('➕ Yangi xona', thCreate); }); nb.style.marginTop = '12px'; body.appendChild(nb);
-    const jr = el('div', 'joinrow'), ji = el('input', 'inp'); ji.placeholder = 'KOD'; ji.maxLength = 5; ji.autocomplete = 'off';
-    jr.append(ji, mkBtn('', 'Kirish', () => { if (ji.value.trim().length >= 4) thEnterRoom(ji.value); else toast('5 belgili kodni kiriting'); }));
-    body.appendChild(jr);
-    body.appendChild(el('label', 'lbl', 'Ochiq xonalar'));
-    const list = el('div'); body.appendChild(list); list.appendChild(el('div', 'note', '⏳ Yuklanmoqda...'));
-    api('/api/theatre/rooms').then(d => {
-      list.replaceChildren();
-      if (!d.items.length) list.appendChild(el('div', 'note', 'Hozircha xona yo\'q. Birinchi bo\'lib oching!'));
-      d.items.forEach(r => {
-        const b = el('button', 'pl'); const tmI = el('div', 'tm'); tmI.innerHTML = si(r.locked ? 'lock' : 'eye'); b.appendChild(tmI);
-        const tx = el('div', 'tx'); tx.appendChild(el('b', '', r.title)); tx.appendChild(el('span', '', '🎬 ' + r.movie + ' · 👤 ' + r.owner));
-        const stN = el('div', 'st'); stN.innerHTML = (ME.role === 'owner' && !r.mine ? si('ghost') + ' ' : '') + '👁 ' + r.viewers;
-        b.append(tx, stN); b.onclick = () => { haptic(); thEnterRoom(r.id); }; list.appendChild(b);
-      });
-    }).catch(e => { list.replaceChildren(el('div', 'note', errMsg(e))); });
   }
   function moviePicker(host, onPick) {
     const KINDS = [['', 'Hammasi'], ['kino', '🎬 Kino'], ['multfilm', '🧸 Multfilm'], ['serial', '📺 Serial'], ['anime', '🎌 Anime']];
@@ -3430,18 +3921,21 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     load(true);
   }
   function thCreate(body) {
-    const p = el('div', 'panel'); body.appendChild(p); let movieId = 0, locked = false;
-    p.appendChild(el('label', 'lbl', 'Xona nomi *'));
-    const ti = el('input', 'inp'); ti.placeholder = 'Masalan: Juma kechasi'; ti.maxLength = 40; p.appendChild(ti);
+    const wrap = el('div', 't2-wrap'), p = el('div', 'panel'); wrap.appendChild(p); body.appendChild(wrap); let movieId = 0, locked = false;
+    const lb = el('label', 'lbl', 'Xona nomi *'); const cnt = el('span', 't2-cnt', '0/40'); lb.appendChild(cnt); p.appendChild(lb);
+    const ti = el('input', 'inp'); ti.placeholder = 'Masalan: Juma kechasi'; ti.maxLength = 40; ti.addEventListener('input', () => { cnt.textContent = ti.value.length + '/40'; }); p.appendChild(ti);
     p.appendChild(el('label', 'lbl', 'Qaysi kinoni ko\'ramiz? *'));
     moviePicker(p, id => { movieId = id; });
     p.appendChild(el('label', 'lbl', 'Kirish'));
-    const ch = el('div', 'qchips'), pw = el('input', 'inp'); pw.placeholder = 'Parol (20 belgigacha)'; pw.maxLength = 20; pw.hidden = true; pw.style.marginTop = '8px';
+    const seg = el('div', 't2-seg'), pww = el('div', 't2-pw'), pw = el('input', 'inp'); pw.placeholder = 'Parol (20 belgigacha)'; pw.maxLength = 20; pw.type = 'password'; pw.autocomplete = 'off';
+    const eye = el('button'); eye.type = 'button'; eye.innerHTML = si('eye'); eye.setAttribute('aria-label', 'Parolni ko\'rsatish'); eye.onclick = () => { pw.type = pw.type === 'password' ? 'text' : 'password'; };
+    pww.append(pw, eye); pww.hidden = true;
     const b1 = mkBtn('on', '🌐 Ochiq', () => set(false)), b2 = mkBtn('', '🔒 Parol bilan', () => set(true));
-    const set = v => { haptic(); locked = v; b1.classList.toggle('on', !v); b2.classList.toggle('on', v); pw.hidden = !v; if (v) pw.focus(); };
-    ch.append(b1, b2); p.append(ch, pw);
-    p.appendChild(el('div', 'note', 'Siz play/pauza/oldinga o\'tkazishni boshqarasiz, qolganlar birga ko\'radi.')).style.marginTop = '10px';
-    const go = mkBtn('btn main full', '🚪 Xonani ochish', async () => {
+    const set = v => { haptic(); locked = v; b1.classList.toggle('on', !v); b2.classList.toggle('on', v); pww.hidden = !v; hint.textContent = v ? 'Faqat parolni bilganlar kira oladi. Parol havolaga qo\'shilmaydi.' : 'Ro\'yxatdagi hamma kira oladi. Havola orqali do\'stlaringizni ham taklif qilasiz.'; if (v) pw.focus(); };
+    seg.append(b1, b2); p.append(seg, pww);
+    const hint = el('div', 'note', 'Ro\'yxatdagi hamma kira oladi. Havola orqali do\'stlaringizni ham taklif qilasiz.'); hint.style.marginTop = '10px'; p.appendChild(hint);
+    p.appendChild(el('div', 'note', 'Siz play/pauza/oldinga o\'tkazishni boshqarasiz, qolganlar birga ko\'radi. Xonadan istalgan kishini chiqara olasiz.')).style.marginTop = '6px';
+    const go = mkBtn('t2-cta t2-big', '🚪 Xonani ochish', async () => {
       if (ti.value.trim().length < 2) { toast('Xonaga nom bering'); return; }
       if (!movieId) { toast('Kinoni tanlang'); return; }
       if (locked && !pw.value.trim()) { toast('Parolni kiriting'); return; }
@@ -3449,6 +3943,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       try {
         const r = await api('/api/theatre/room', { title: ti.value.trim(), movie_id: movieId, password: locked ? pw.value.trim() : '' });
         haptic('medium'); thReplace(ti.value.trim(), b => thHall(b, { mode: 'room', room: r.id, host: true }), true);
+        toast('✅ Xona ochildi. «👥 Taklif» tugmasi orqali do\'stlaringizni chaqiring', 4200);
       } catch (e) {
         if (e.vip) {
           toast(errMsg(e), 3600); go.disabled = false; go.textContent = '👑 VIP olish';
@@ -3458,7 +3953,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         toast(errMsg(e), 3600); go.disabled = false; go.textContent = '🚪 Xonani ochish';
       }
     });
-    go.style.marginTop = '14px'; p.appendChild(go);
+    p.appendChild(go);
   }
 
   /* ── Premyera (admin) ── */
@@ -3501,6 +3996,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       body.appendChild(b);
     });
   }
+
   $('#thBack').onclick = thBack;
   $('#thBtn').onclick = thOpen;
 
@@ -3540,6 +4036,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       TH.on = !!me.theatre; $('#thBtn').hidden = !TH.on;
             if (me.admin) { ME = Object.assign(ME, me); $('#gear').hidden = false; applyTabs(); }
       applyVip(me.vip); layoutTop();
+      thDeepLink();
     } catch (e) {}
     try {
       const q0 = (new URLSearchParams(location.search).get('q') || '').trim().slice(0, 80);

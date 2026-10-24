@@ -1,4 +1,5 @@
 """Mini App serveri: statik sahifa + JSON API (Telegram initData bilan himoyalangan)."""
+import asyncio
 import hashlib
 import hmac
 import html
@@ -6,7 +7,7 @@ import json
 import logging
 import re
 import time
-from urllib.parse import parse_qsl
+from urllib.parse import parse_qsl, quote
 
 from aiohttp import web
 from aiogram.exceptions import TelegramAPIError
@@ -20,6 +21,7 @@ import perms
 import promo
 import services as svc
 import theatre
+import theatre_rt as rt
 import trailers
 import vip
 import audit
@@ -312,7 +314,7 @@ async def api_chat_mod(request: web.Request):
         _admin(request)
         mid = int(body.get("id") or 0)
         if body.get("scope") == "theatre":
-            await db.th_chat_delete(mid)
+            await _th_chat_remove(mid)
         else:
             await db.chat_delete(mid)
         return web.json_response({"ok": True})
@@ -1371,8 +1373,8 @@ async def api_th_state(request: web.Request):
 
 async def api_th_plan(request: web.Request):
     _th_on()
-    _auth(request)
-    return web.json_response(await theatre.plan_view())
+    user = _auth(request)
+    return web.json_response(await theatre.plan_view(uid=user["id"]))
 
 
 async def api_th_video(request: web.Request):
@@ -1455,25 +1457,75 @@ async def api_th_chat_send(request: web.Request):
     if time.time() - await db.th_chat_last_at(user["id"]) < CHAT_COOLDOWN:
         return web.json_response({"error": "Biroz sekinroq yozing 🙂"}, status=429)
     msg = await db.th_chat_add(key, user["id"], _uname(user), text)
-    return web.json_response({"ok": True, "key": key, "item": {**msg, "mine": True, "staff": perms.is_staff(user["id"])}})
+    item = {**msg, "staff": perms.is_staff(user["id"]), "vip": user["id"] in await vip.vip_set([user["id"]])}
+    # real vaqt: zaldagilarga darrov tarqatamiz (public zal kaliti seansga qarab o'zgaradi, kanal esa doim «pub»)
+    rt.hub.publish("pub" if room_param == "pub" else key, "chat", {"key": key, "item": item})
+    return web.json_response({"ok": True, "key": key, "item": {**item, "mine": True}})
+
+
+async def _th_chat_remove(mid: int) -> None:
+    """Teatr chat xabarini o'chiradi va zaldagilarga ham bildiradi."""
+    row = await db.q_one("SELECT room FROM theatre_chat WHERE id=?", (mid,))
+    await db.th_chat_delete(mid)
+    if row:
+        rt.hub.publish("pub" if row["room"].startswith("pub:") else row["room"], "chat_del", {"id": mid})
 
 
 async def api_th_chat_delete(request: web.Request):
     _admin(request)
     body = await request.json()
-    await db.th_chat_delete(int(body.get("id", 0)))
+    await _th_chat_remove(int(body.get("id", 0)))
     return web.json_response({"ok": True})
 
 
 # — Shaxsiy xonalar —
+def _th_room_items(rows, user: dict) -> list:
+    out = []
+    for r in rows:
+        art = theatre._art({"id": r["mid"], "series_id": r["mseries"], "scover": r["scover"] or "",
+                            "cover_id": r["mcover"] or ""})
+        out.append({"id": r["id"], "title": r["title"], "locked": bool(r["pw"]), "owner": r["owner_name"],
+                    "movie": r["mtitle"] + (f" · {r['mep']}-qism" if r["mseries"] and r["mep"] else ""),
+                    "art": art, "mid": r["mid"], "viewers": theatre.viewers(r["id"]),
+                    "mine": r["owner"] == user["id"]})
+    return out
+
+
 async def api_th_rooms(request: web.Request):
     _th_on()
     user = _auth(request)
     rows = await db.th_rooms_list(int(time.time()) - 3 * 3600)
-    return web.json_response({"items": [
-        {"id": r["id"], "title": r["title"], "locked": bool(r["pw"]), "owner": r["owner_name"],
-         "movie": r["mtitle"], "viewers": theatre.viewers(r["id"]), "mine": r["owner"] == user["id"]}
-        for r in rows]})
+    return web.json_response({"items": _th_room_items(rows, user)})
+
+
+async def api_th_home(request: web.Request):
+    """Teatr bosh sahifasi uchun hammasi bitta so'rovda: efir, bugungi reja, premyeralar, xonalar."""
+    _th_on()
+    user = _auth(request)
+    st = await theatre.state()
+    st["viewers"] = theatre.viewers("pub")
+    rows = await db.th_rooms_list(int(time.time()) - 3 * 3600, 12)
+    return web.json_response({
+        "state": st, "plan": await theatre.plan_view(uid=user["id"]),
+        "premieres": await theatre.premieres_view(user["id"]), "rooms": _th_room_items(rows, user),
+    })
+
+
+async def api_th_remind(request: web.Request):
+    """Seansdan 10 daqiqa oldin Telegramga eslatma: yoqish / o'chirish."""
+    _th_on()
+    user = _auth(request)
+    body = await request.json()
+    try:
+        start = int(body.get("start") or 0)
+    except (TypeError, ValueError):
+        return _bad("Seans noto'g'ri")
+    on = body.get("on")
+    try:
+        res = await theatre.remind_toggle(user["id"], start, None if on is None else bool(on))
+    except theatre.RemindError as e:
+        return _bad(str(e))
+    return web.json_response({"ok": True, **res})
 
 
 async def api_th_room_create(request: web.Request):
@@ -1509,14 +1561,18 @@ async def api_th_room_join(request: web.Request):
     rid = str(body.get("id") or "").strip().upper()
     room = await db.th_room_get(rid)
     if not room:
-        return _bad("Bunday xona topilmadi")
+        return _bad("Bunday xona topilmadi yoki yopilgan")
+    if not perms.is_staff(user["id"]) and await db.th_kicked_has(rid, user["id"]):
+        return web.json_response({"error": "Siz bu xonadan chiqarib yuborilgansiz", "kicked": True}, status=403)
     if not await db.th_member_has(rid, user["id"]) and room["pw"]:
         if not theatre.pw_allowed(user["id"], rid):
             return web.json_response({"error": "Juda ko'p urinish. Birozdan keyin qayta urinib ko'ring"}, status=429)
         if not theatre.check_pw(room, str(body.get("password") or "")):
             theatre.pw_failed(user["id"], rid)
             return _bad("Parol noto'g'ri")
-    await db.th_member_add(rid, user["id"])
+    if not await db.th_member_has(rid, user["id"]):
+        await db.th_member_add(rid, user["id"])
+        rt.hub.publish(rid, "roster", {})
     return web.json_response({"ok": True, "id": rid})
 
 
@@ -1531,11 +1587,17 @@ async def api_th_room_get(request: web.Request):
     if not await db.th_member_has(rid, user["id"]):
         if perms.role(user["id"]) == "owner":
             ghost = True  # 👻 Bosh admin: parolsiz, sezdirmay kuzatadi (a'zo bo'lmaydi, tomoshabin hisobiga kirmaydi)
+        elif not perms.is_staff(user["id"]) and await db.th_kicked_has(rid, user["id"]):
+            raise web.HTTPForbidden(reason="Siz bu xonadan chiqarib yuborilgansiz")
         elif room["pw"]:
             raise web.HTTPForbidden(reason="locked")
         else:
             await db.th_member_add(rid, user["id"])
+            rt.hub.publish(rid, "roster", {})
     mv = await db.get_movie(room["movie_id"])
+    ser = await db.get_series(mv["series_id"]) if mv["series_id"] else None
+    art = theatre._art({"id": mv["id"], "series_id": mv["series_id"], "scover": ser["cover_id"] if ser else "",
+                        "cover_id": mv["cover_id"]})
     now = time.time()
     if not ghost:
         theatre.seen(rid, user["id"])
@@ -1550,7 +1612,7 @@ async def api_th_room_get(request: web.Request):
                  "locked": bool(room["pw"]), "playing": bool(room["playing"]), "pos": theatre.room_pos(room, now),
                  "now": now, "ghost": ghost, **extra,
                  "movie": {"id": mv["id"], "title": mv["title"], "duration": mv["duration"],
-                           "ep": mv["ep"] if mv["series_id"] else None}},
+                           "ep": mv["ep"] if mv["series_id"] else None, "art": art}},
         "viewers": theatre.viewers(rid),
     })
 
@@ -1565,7 +1627,10 @@ async def api_th_room_state(request: web.Request):
         raise web.HTTPForbidden(reason="Faqat xona egasi boshqaradi")
     body = await request.json()
     pos = max(float(body.get("pos") or 0), 0.0)
-    await db.th_room_state(rid, bool(body.get("playing")), pos, time.time())
+    now = time.time()
+    playing = bool(body.get("playing"))
+    await db.th_room_state(rid, playing, pos, now)
+    rt.hub.publish(rid, "state", {"playing": playing, "pos": pos, "now": now})  # tomoshabinlar darrov moslashadi
     return web.json_response({"ok": True})
 
 
@@ -1582,7 +1647,156 @@ async def api_th_room_delete(request: web.Request):
         await audit.log(user["id"], _uname(user), "theatre", "Teatr xonasi yopildi",
                         f"{room['title']} (#{rid}) · egasi: {room['owner_name']}")
     await db.th_room_del(rid)
+    rt.hub.close_key(rid, "closed", {})
     return web.json_response({"ok": True})
+
+
+# — Real vaqt: oqim (SSE), reaksiyalar, ishtirokchilar, taklif —
+SSE_LIFE = 600  # bitta oqim umri (soniya): keyin brauzer o'zi qayta ulanadi va ruxsatlar (ban, chiqarilish) qayta tekshiriladi
+
+
+async def _th_channel(user: dict, room: str) -> tuple[str, bool]:
+    """Real vaqt kanali va 👻 sharpa belgisi. Ruxsat qoidalari chat bilan bir xil."""
+    room = (room or "pub").strip()
+    if room == "pub":
+        return "pub", False
+    key = await _th_chat_room(user, room.upper(), False)
+    ghost = perms.role(user["id"]) == "owner" and not await db.th_member_has(key, user["id"])
+    return key, ghost
+
+
+async def api_th_events(request: web.Request):
+    """Server-Sent Events: chat, reaksiya, tomoshabinlar soni, xona holati — bitta ochiq ulanishda."""
+    _th_on()
+    user = _auth_q(request)
+    key, ghost = await _th_channel(user, request.query.get("room", "pub"))
+    sub = rt.hub.subscribe(key, user["id"], ghost)
+    if sub is None:
+        raise web.HTTPTooManyRequests(reason="Juda ko'p ulanish")
+    resp = web.StreamResponse(status=200, headers={
+        "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache, no-transform",
+        "X-Accel-Buffering": "no", "Connection": "keep-alive"})
+    try:
+        await resp.prepare(request)
+        await resp.write(b"retry: 4000\n\n" + rt.fmt("hello", {"v": theatre.viewers(key), "now": time.time()}))
+        end = time.monotonic() + SSE_LIFE
+        while not sub.closed:
+            left = end - time.monotonic()
+            if left <= 0:
+                break
+            try:
+                ev = await asyncio.wait_for(sub.q.get(), min(15, left))
+            except asyncio.TimeoutError:
+                if not ghost:
+                    theatre.seen(key, user["id"])
+                await resp.write(b": ka\n\n")
+                continue
+            if ev is None:
+                break
+            await resp.write(ev)
+    except (ConnectionResetError, ConnectionError):
+        pass
+    finally:
+        rt.hub.unsubscribe(sub)
+    return resp
+
+
+async def api_th_react(request: web.Request):
+    """Reaksiya (🔥 😂 😮 ❤️ 👏). Bazaga yozilmaydi; server tezlikni cheklaydi va paketlab tarqatadi."""
+    _th_on()
+    user = _auth(request)
+    body = await request.json()
+    emoji, room = str(body.get("emoji") or ""), str(body.get("room") or "pub").strip()
+    if emoji not in rt.REACTIONS:
+        return _bad("Noto'g'ri reaksiya")
+    uid = user["id"]
+    if not rt.hub.allow(uid):
+        return web.json_response({"ok": False, "slow": True})
+    key = "pub" if room == "pub" else room.upper()
+    if not rt.hub.has(key, uid):  # ochiq oqim bo'lmasa (zaxira rejim) — ruxsatni bazadan tekshiramiz
+        key, ghost = await _th_channel(user, room)
+        if ghost:
+            return web.json_response({"ok": False})
+    if key == "pub" and await theatre.current_key() == "pub:closed":
+        return web.json_response({"ok": False})
+    rt.hub.push(key, uid, emoji)
+    return web.json_response({"ok": True})
+
+
+async def _th_room_for_members(request: web.Request, user: dict):
+    """Xonani qaytaradi (a'zo yoki 👻 bosh admin bo'lsa), aks holda xato."""
+    rid = request.match_info["id"].upper()
+    room = await db.th_room_get(rid)
+    if not room:
+        raise web.HTTPNotFound(reason="Xona topilmadi yoki yopilgan")
+    member = await db.th_member_has(rid, user["id"])
+    ghost = perms.role(user["id"]) == "owner" and not member
+    if not (member or ghost):
+        raise web.HTTPForbidden(reason="locked")
+    return room, ghost
+
+
+async def api_th_room_members(request: web.Request):
+    _th_on()
+    user = _auth(request)
+    room, ghost = await _th_room_for_members(request, user)
+    rid, rows, on = room["id"], await db.th_members(room["id"]), theatre.online(room["id"])
+    vips = await vip.vip_set([r["id"] for r in rows])
+    items = [{"id": r["id"], "name": (r["full_name"] or (room["owner_name"] if r["id"] == room["owner"] else "") or "Foydalanuvchi")[:40],
+              "online": r["id"] in on, "host": r["id"] == room["owner"], "staff": perms.is_staff(r["id"]),
+              "vip": r["id"] in vips} for r in rows]
+    items.sort(key=lambda x: (not x["host"], not x["online"], x["name"].lower()))
+    can_kick = room["owner"] == user["id"] or ghost or (perms.is_staff(user["id"]) and not room["pw"])
+    return web.json_response({"items": items[:200], "me": user["id"], "host": room["owner"],
+                              "can_kick": can_kick, "viewers": len(on), "total": len(items)})
+
+
+async def api_th_room_kick(request: web.Request):
+    """Xona egasi (yoki admin) foydalanuvchini xonadan chiqaradi: u qayta kira olmaydi."""
+    _th_on()
+    user = _auth(request)
+    rid = request.match_info["id"].upper()
+    room = await db.th_room_get(rid)
+    if not room:
+        raise web.HTTPNotFound(reason="Xona topilmadi yoki yopilgan")
+    body = await request.json()
+    target = int(body.get("uid") or 0)
+    is_host, boss = room["owner"] == user["id"], perms.role(user["id"]) == "owner"
+    if not (is_host or boss or (perms.is_staff(user["id"]) and not room["pw"])):
+        raise web.HTTPForbidden(reason="Faqat xona egasi foydalanuvchini chiqara oladi")
+    if not target or target == user["id"]:
+        return _bad("O'zingizni chiqarib bo'lmaydi")
+    if target == room["owner"]:
+        return _bad("Xona egasini chiqarib bo'lmaydi")
+    if perms.is_staff(target) and not boss:
+        return _bad("Adminni chiqarib bo'lmaydi")
+    if not await db.th_member_has(rid, target):
+        return _bad("Bu foydalanuvchi xonada emas")
+    await db.th_kick(rid, target)
+    theatre.gone(rid, target)
+    rt.hub.send_to(rid, target, "kicked", {"uid": target}, close=True)
+    rt.hub.publish(rid, "roster", {})
+    if not is_host:
+        await audit.log(user["id"], _uname(user), "theatre", "Teatr xonasidan foydalanuvchi chiqarildi",
+                        f"{room['title']} (#{rid}) · ID {target}")
+    return web.json_response({"ok": True})
+
+
+async def api_th_room_invite(request: web.Request):
+    """Xona egasi uchun taklif havolasi. Havolada faqat xona kodi bor — parol hech qachon havolaga qo'shilmaydi."""
+    _th_on()
+    user = _auth(request)
+    rid = request.match_info["id"].upper()
+    room = await db.th_room_get(rid)
+    if not room:
+        raise web.HTTPNotFound(reason="Xona topilmadi yoki yopilgan")
+    if room["owner"] != user["id"]:
+        raise web.HTTPForbidden(reason="Faqat xona egasi taklif havolasini oladi")
+    me = await request.app["bot"].me()
+    link = f"https://t.me/{me.username}?start=r_{rid}"
+    text = f"🎬 «{room['title']}» xonasida birga kino ko'ramiz!" + ("\n🔒 Xona parolli — parolni mendan so'rang." if room["pw"] else "")
+    return web.json_response({"link": link, "text": text, "locked": bool(room["pw"]),
+                              "share": f"https://t.me/share/url?url={quote(link)}&text={quote(text)}"})
 
 
 # — Premyera (admin) —
@@ -1641,6 +1855,7 @@ async def api_admin_th_cancel(request: web.Request):
     if (mv["premiere_at"] or 0) <= time.time():
         return _bad("Premyera boshlangan — bekor qilib bo'lmaydi")
     await db.q_run("UPDATE movies SET status='pending', premiere_at=NULL WHERE id=?", (mv["id"],))
+    await theatre.on_premiere_cancel(request.app["bot"], mv["id"], mv["title"])  # eslatma qo'ygan tomoshabinlarga xabar
     return web.json_response({"ok": True})
 
 
@@ -1849,6 +2064,13 @@ def make_app(bot) -> web.Application:
     r.add_post("/api/theatre/chat", api_th_chat_send)
     r.add_post("/api/theatre/chat/delete", api_th_chat_delete)
     r.add_get("/api/theatre/rooms", api_th_rooms)
+    r.add_get("/api/theatre/home", api_th_home)
+    r.add_post("/api/theatre/remind", api_th_remind)
+    r.add_post("/api/theatre/react", api_th_react)
+    r.add_get("/api/theatre/events", api_th_events)
+    r.add_get("/api/theatre/room/{id}/invite", api_th_room_invite)
+    r.add_get("/api/theatre/room/{id}/members", api_th_room_members)
+    r.add_post("/api/theatre/room/{id}/kick", api_th_room_kick)
     r.add_post("/api/theatre/room", api_th_room_create)
     r.add_post("/api/theatre/room/join", api_th_room_join)
     r.add_get("/api/theatre/room/{id}", api_th_room_get)

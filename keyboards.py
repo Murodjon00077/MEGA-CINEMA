@@ -21,6 +21,15 @@ def webapp_button(text: str = "🎬 MEGA CINEMA", query: str = "") -> B | None:
     return B(text=text, web_app=WebAppInfo(url=url))
 
 
+def theatre_button(text: str, **params) -> B | None:
+    """Mini App'ni Teatr bo'limida ochuvchi tugma (masalan, room=ABCDE — xonaga to'g'ridan-to'g'ri kirish)."""
+    if not config.WEBAPP_URL:
+        return None
+    qs = "&".join(f"{k}={quote(str(v))}" for k, v in params.items())
+    url = config.WEBAPP_URL + ("&" if "?" in config.WEBAPP_URL else "?") + qs
+    return B(text=text, web_app=WebAppInfo(url=url))
+
+
 # ───────────── Foydalanuvchi ─────────────
 def main_kb() -> InlineKeyboardMarkup:
     """Bosh menyu: faqat katalogni ochuvchi «MEGA CINEMA» tugmasi."""
