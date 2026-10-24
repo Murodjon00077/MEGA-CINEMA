@@ -128,7 +128,8 @@ main{padding:4px 14px}
 .tl.top{background:linear-gradient(135deg,#ff5f3d,#ff2f6d);color:#fff}
 .tl.new{background:linear-gradient(135deg,#27c4ff,#3b6dff);color:#fff}
 .tl.free{background:linear-gradient(135deg,#3ddc97,#17a673);color:#032419}
-.tl.pro{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00}
+.tl.vip{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00}
+.tl.pro{background:linear-gradient(135deg,#b49cff,#6d4aff);color:#fff}
 .card .badge.q,.card .badge.e{top:auto;bottom:8px;left:auto;right:8px}
 .card .views{left:8px}
 /* Reklama slaydi */
@@ -319,12 +320,42 @@ textarea.inp{min-height:96px;resize:vertical;line-height:1.4}
 .tbtn:active{transform:scale(.92)}
 .tbtn[hidden]{display:none}
 .rib{position:absolute;right:0;top:36px;padding:3px 8px 3px 10px;border-radius:8px 0 0 8px;font-size:10.5px;font-weight:800;letter-spacing:.3px;z-index:2}
-.rib.pro{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00}
+.rib.vip{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00}
+.rib.pro{background:linear-gradient(135deg,#b49cff,#6d4aff);color:#fff}
 .rib.free{background:rgba(61,220,151,.92);color:#04281a}
-.tag.pro{color:#ffd166;border-color:rgba(255,209,102,.5)}
+.tag.vip{color:#ffd166;border-color:rgba(255,209,102,.5)}
+.tag.pro{color:#c4b5fd;border-color:rgba(167,139,250,.6)}
 .tag.free{color:var(--ok);border-color:rgba(61,220,151,.4)}
 .tag.no{color:#ff9b9b;border-color:rgba(255,120,120,.5);background:rgba(255,90,90,.1)}
 .epb{position:relative}
+/* ── PRO: sotib olish oynasi ── */
+.buybox{padding:6px 16px calc(24px + env(safe-area-inset-bottom))}
+.bhead{display:flex;gap:14px;align-items:center;margin:8px 0 14px}
+.bhead .bp{flex:none;width:78px;border-radius:12px;overflow:hidden;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+.bhead .bp .poster{border-radius:0}
+.bhead h2{font-size:18px;line-height:1.25;margin-bottom:4px}
+.bhead .bprice{font-size:26px;font-weight:900;background:linear-gradient(135deg,#b49cff,#7f5bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.bhead .bsub{color:var(--muted);font-size:12.5px;margin-top:2px}
+.bmeth{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;margin-top:9px;border-radius:16px;background:var(--card);border:1px solid var(--line);font-weight:800;font-size:15px;text-align:left;transition:transform .15s,border-color .2s}
+.bmeth:active{transform:scale(.98)}
+.bmeth .bi{flex:none;width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(var(--a1rgb),.16)}
+.bmeth small{display:block;color:var(--muted);font-weight:500;font-size:12px;margin-top:1px}
+.bmeth.click .bi{background:rgba(0,170,255,.18)}.bmeth.payme .bi{background:rgba(0,200,180,.18)}
+.bcard{margin-top:10px;padding:14px;border-radius:18px;background:var(--card);border:1px solid var(--line)}
+.bcard .ct{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+.bcard .cn{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-radius:14px;background:linear-gradient(135deg,rgba(var(--a1rgb),.22),rgba(var(--a1rgb),.06));border:1px solid rgba(var(--a1rgb),.4);margin:6px 0}
+.bcard .cn b{font-size:17px;letter-spacing:.8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.bcard .cn button{flex:none;padding:7px 12px;border-radius:10px;background:var(--bg2);border:1px solid var(--line);font-size:12.5px;font-weight:800}
+.bcard .cr{display:flex;justify-content:space-between;gap:10px;padding:6px 2px;font-size:13.5px}
+.bcard .cr span{color:var(--muted)}
+.bchk{display:flex;gap:10px;align-items:center;margin-top:12px}
+.bchk .pv{flex:none;width:56px;height:56px;border-radius:12px;background:var(--bg2) center/cover;border:1px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:22px}
+.bstat{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(255,193,7,.12);border:1px solid rgba(255,193,7,.4);font-size:13.5px;line-height:1.4}
+.bstat.ok{background:rgba(61,220,151,.12);border-color:rgba(61,220,151,.45)}
+.pcards .pc{display:flex;align-items:center;gap:10px;padding:10px 12px;margin-top:8px;border-radius:14px;background:var(--bg2);border:1px solid var(--line)}
+.pcards .pc.off{opacity:.55}
+.pcards .pc .grow{flex:1;min-width:0}
+.epb.gem::after{content:'💎';position:absolute;top:-7px;right:-3px;font-size:11px}
 .epb.pro::after{content:'👑';position:absolute;top:-7px;right:-3px;font-size:11px}
 .cn .adm-b.vip{background:linear-gradient(135deg,#ffd166,#f08a24);color:#2b1a00}
 .vipbox{padding:8px 20px 6px;text-align:center}
@@ -560,13 +591,20 @@ textarea.inp{min-height:96px;resize:vertical;line-height:1.4}
 .hinfo .nm{font-weight:800;font-size:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;line-height:1.25}
 .hinfo .sm{color:var(--t-mut);font-size:12.5px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ptag{font-size:10.5px;padding:3px 9px;border-radius:99px;background:var(--grad);color:var(--onacc);font-weight:800}
-.t2-rx{flex:none;display:flex;align-items:center;gap:8px;padding:6px 14px 8px;overflow-x:auto;scrollbar-width:none}
+.t2-rx{flex:none;display:flex;align-items:center;gap:6px;padding:6px 14px 8px;overflow-x:auto;scrollbar-width:none}
 .t2-rx::-webkit-scrollbar{display:none}
-.t2-rx button{flex:none;width:46px;height:42px;border-radius:15px;background:var(--t-s1);border:1px solid var(--t-line);font-size:22px;line-height:1;transition:transform .12s,background .2s,opacity .2s}
+.t2-rx button{flex:none;width:40px;height:42px;border-radius:15px;background:var(--t-s1);border:1px solid var(--t-line);font-size:22px;line-height:1;transition:transform .12s,background .2s,opacity .2s}
 .t2-rx button:active{transform:scale(.88)}
 .t2-rx button.pop{animation:t2pop .3s}
 .t2-rx button.cd{opacity:.45}
-.t2-rx .sp{flex:1}
+.t2-rx .sp{flex:1;min-width:2px}
+@media(max-width:430px){.t2-rx .inv .lbl{display:none}.t2-rx .inv{width:40px!important;padding:0!important;justify-content:center}.t2-rx button{font-size:20px}}
+.t2-vb{flex:none;width:40px;height:42px;border-radius:15px;background:var(--t-s1);border:1px solid var(--t-line);display:flex;align-items:center;justify-content:center;color:var(--t-mut);transition:transform .12s,background .2s,color .2s,border-color .2s}
+.t2-vb:active{transform:scale(.88)}
+.t2-vb.ear.on{color:#fff;background:rgba(var(--a1rgb),.22);border-color:rgba(var(--a1rgb),.7)}
+.t2-vb.mic.on{color:#fff;background:#e0243f;border-color:#ff6b81;animation:t2pulse 1.7s infinite}
+.t2-fsrx .t2-vb{width:40px;height:40px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(6px)}
+.t2-m .bd.mic{background:#e0243f;color:#fff}
 .t2-rx .inv{flex:none;display:inline-flex;align-items:center;gap:6px;height:42px;padding:0 14px;border-radius:15px;background:rgba(var(--a1rgb),.16);border:1px solid rgba(var(--a1rgb),.55);font-size:13px;font-weight:800;width:auto}
 .t2-tabs{flex:none;display:flex;gap:6px;padding:8px 12px 0}
 .t2-tabs button{flex:1;padding:9px 6px;border-radius:13px 13px 0 0;font-weight:800;font-size:13.5px;color:var(--t-mut);border-bottom:2px solid transparent;transition:.2s}
@@ -1310,10 +1348,10 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   }
 
   /* ───────── Kartalar ───────── */
-  const TL = { top: 'TOP', new: 'NEW', pro: 'PRO', free: 'FREE' };
+  const TL = { top: 'TOP', new: 'NEW', pro: 'PRO', vip: 'VIP', free: 'FREE' };
   function tlEl(k) {
     const e = el('span', 'tl ' + k);
-    e.innerHTML = (k === 'top' ? si('flame') : k === 'pro' ? si('crown') : '') + TL[k];
+    e.innerHTML = (k === 'top' ? si('flame') : k === 'vip' ? si('crown') : k === 'pro' ? '\ud83d\udc8e ' : '') + TL[k];
     return e;
   }
   function card(m, i) {
@@ -1474,7 +1512,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const bg = posterBox(m); bg.classList.add('hs-bgp'); s.appendChild(bg);
       s.appendChild(el('div', 'hs-shade'));
       if (m.lbl && TL[m.lbl]) s.appendChild(tlEl(m.lbl));
-      if (m.pay === 'pro' && m.lbl !== 'pro') { const rb = el('span', 'rib pro'); rb.style.top = '9px'; rb.innerHTML = si('crown') + 'PRO'; s.appendChild(rb); }
+      if ((m.pay === 'pro' || m.pay === 'vip') && m.lbl !== m.pay) { const rb = el('span', 'rib ' + m.pay); rb.style.top = '9px'; rb.innerHTML = (m.pay === 'vip' ? si('crown') : '\ud83d\udc8e ') + TL[m.pay]; s.appendChild(rb); }
       const body = el('div', 'hs-in');
       const tx = el('div', 'hs-tx');
       tx.appendChild(el('div', 'hs-t', m.title));
@@ -1559,6 +1597,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     }
   }
 
+  let CUR = null;
   async function sendToBot(id, btn, label) {
     haptic('medium');
     btn.disabled = true; btn.textContent = '⏳';
@@ -1571,6 +1610,8 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       } else if (r.status === 'sub') {
         toast('📢 Avval kanallarga obuna bo\'ling. Botga xabar yuborildi.', 3200);
         setTimeout(() => { try { tg.close(); } catch (e) { reset(); } }, 2000);
+      } else if (r.status === 'pro' && CUR) {
+        toast('\ud83d\udc8e Bu PRO kontent \u2014 sotib olish kerak', 2600); reset(); openBuy(CUR);
       } else if (r.status === 'vip') {
         toast('👑 Bu pullik kontent — VIP kerak', 2600); reset(); openVip();
       } else { toast('⚠️ Yuborib bo\'lmadi'); reset(); }
@@ -1742,7 +1783,9 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
   }
 
   function renderSheet(m) {
+    CUR = m;
     const isS = m.t === 's';
+    const gated = m.pay === 'pro' && !m.owned;   // PRO: sotib olinmagan
     const fk = m.fk != null ? m.fk : m.id;
     sheet.replaceChildren(el('div', 'grab'));
 
@@ -1754,9 +1797,10 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     if (meta) info.appendChild(el('div', 'dmeta', meta));
     const tags = el('div', 'dtags');
     if (isS || m.kind !== 'kino') tags.appendChild(el('span', 'tag', KIND_LABEL[m.kind] || m.kind));
-    if (m.pay === 'pro') { const tg1 = el('span', 'tag pro'); tg1.innerHTML = si('crown') + 'PRO'; tags.appendChild(tg1); }
+    if (m.pay === 'pro') { const tg1 = el('span', 'tag pro'); tg1.innerHTML = '\ud83d\udc8e PRO' + (m.price ? ' \u00b7 ' + priceTxt(m.price) : ''); tags.appendChild(tg1); }
+    else if (m.pay === 'vip') { const tg1 = el('span', 'tag vip'); tg1.innerHTML = si('crown') + 'VIP'; tags.appendChild(tg1); }
     else if (m.pay === 'free') tags.appendChild(el('span', 'tag free', 'FREE'));
-    if (isS && m.pay === 'pro') { const nf = m.eps.filter(e => !e.pro).length; if (nf) tags.appendChild(el('span', 'tag free', '\ud83c\udf81 ' + nf + ' qism tekin')); }
+    if (isS && m.pay === 'vip') { const nf = m.eps.filter(e => !e.pro).length; if (nf) tags.appendChild(el('span', 'tag free', '\ud83c\udf81 ' + nf + ' qism tekin')); }
     (m.genre || '').split(',').map(x => x.trim()).filter(Boolean).forEach(g => tags.appendChild(el('span', 'tag', g)));
     info.appendChild(tags);
     const rows = el('div', 'rows');
@@ -1796,7 +1840,12 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const seen = new Set(m.seen || []);
       const live = m.eps.filter(e => e.live);
       const li = m.last ? live.findIndex(e => e.id === m.last) : -1;
-      if (li >= 0) {
+      if (gated) {
+        const ba = el('div', 'acts'); ba.style.paddingTop = '12px';
+        ba.appendChild(mkBtn('btn main', '\ud83d\udc8e Butun serialni sotib olish \u2014 ' + priceTxt(m.price), () => openBuy(m)));
+        sheet.appendChild(ba);
+      }
+      if (li >= 0 && !gated) {
         const nx = live[li + 1], tgt = nx || live[li];
         const label = nx ? '\u25b6 ' + nx.ep + '-qismdan davom etish' : '\ud83d\udd01 ' + tgt.ep + '-qismni qayta ko\u2019rish';
         const ca = el('div', 'acts'); ca.style.paddingTop = '12px';
@@ -1807,19 +1856,142 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       sheet.appendChild(el('div', 'sec', 'Qismni tanlang \ud83d\udc47'));
       const g = el('div', 'epgrid');
       m.eps.forEach(e => {
-        const b = el('button', 'epb' + (e.live ? '' : ' pend') + (e.pro ? ' pro' : '') + (seen.has(e.id) ? ' seen' : '') + (e.id === m.last ? ' last' : ''), String(e.ep));
+        const b = el('button', 'epb' + (e.live ? '' : ' pend') + (e.pro ? (m.pay === 'pro' ? ' gem' : ' pro') : '') + (seen.has(e.id) ? ' seen' : '') + (e.id === m.last ? ' last' : ''), String(e.ep));
         b.title = e.ep + '-qism';
-        b.onclick = () => sendToBot(e.id, b, String(e.ep));
+        b.onclick = () => (gated ? openBuy(m) : sendToBot(e.id, b, String(e.ep)));
         g.appendChild(b);
       });
       sheet.appendChild(g);
     } else {
       const acts = el('div', 'acts');
-      const watch = el('button', 'btn main', '\u25b6 Botda ko\u2019rish');
-      watch.onclick = () => sendToBot(m.id, watch, '\u25b6 Botda ko\u2019rish');
+      const wl = gated ? '\ud83d\udc8e Sotib olish \u2014 ' + priceTxt(m.price) : '\u25b6 Botda ko\u2019rish';
+      const watch = el('button', 'btn main', wl);
+      watch.onclick = () => (gated ? openBuy(m) : sendToBot(m.id, watch, wl));
       acts.appendChild(watch); sheet.appendChild(acts);
     }
   }
+
+
+  /* ═════════════ PRO: sotib olish (Click / Payme / karta + chek) ═════════════ */
+  const cardFmt = n => String(n).replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
+  async function copyText(t, okMsg) {
+    let ok = false;
+    try { await navigator.clipboard.writeText(t); ok = true; } catch (e) {
+      try { const x = document.createElement('textarea'); x.value = t; document.body.appendChild(x); x.select(); ok = document.execCommand('copy'); x.remove(); } catch (e2) {}
+    }
+    toast(ok ? okMsg : 'Nusxalab bo\u2019lmadi \u2014 qo\u2019lda belgilang');
+  }
+  async function openBuy(m) {
+    haptic();
+    const was = sheetOpen, gen = ++sheetGen;
+    sheetOpen = true;
+    sheet.replaceChildren(el('div', 'grab'));
+    const box = el('div', 'buybox'); sheet.appendChild(box);
+    box.appendChild(el('div', 'loader', '\u23f3 Yuklanmoqda...'));
+    sheet.scrollTop = 0; sheet.classList.add('on'); ov.classList.add('on');
+    if (!was) { try { tg.BackButton.onClick(closeSheet); tg.BackButton.show(); } catch (e) {} }
+    const q = '/api/pay/options?t=' + (m.t === 's' ? 's' : 'm') + '&id=' + m.id;
+    const load = async () => { const o = await api(q); if (gen === sheetGen) draw(o); return o; };
+    try { await load(); } catch (e) { if (gen === sheetGen) box.replaceChildren(el('div', 'note', errMsg(e))); }
+
+    function draw(o) {
+      box.replaceChildren();
+      const hd = el('div', 'bhead'), bp = el('div', 'bp'); bp.appendChild(posterBox(m));
+      const tx = el('div'); tx.appendChild(el('h2', null, o.title));
+      tx.appendChild(el('div', 'bprice', priceTxt(o.price)));
+      tx.appendChild(el('div', 'bsub', m.t === 's' ? '\ud83d\udc8e PRO \u00b7 butun serial, barcha qismlar' : '\ud83d\udc8e PRO \u00b7 bir marta to\u2019laysiz, doim sizniki'));
+      hd.append(bp, tx); box.appendChild(hd);
+      if (o.owned) {
+        m.owned = true;
+        box.appendChild(el('div', 'bstat ok', '\u2705 Bu kontent sizda ochiq.'));
+        const b = mkBtn('btn main full', '\u25b6 Ko\u2019rishga o\u2019tish', () => { haptic('medium'); openSheet(m); }); b.style.marginTop = '12px'; box.appendChild(b);
+        return;
+      }
+      if (o.pending) box.appendChild(el('div', 'bstat', '\u23f3 Chekingiz adminga yuborilgan. Tasdiqlansa bot sizga xabar yuboradi va kontent ochiladi.'));
+      const names = { click: ['Click', '\ud83d\udcf2', 'Ilova ichida tezkor to\u2019lov'], payme: ['Payme', '\ud83d\udcf2', 'Ilova ichida tezkor to\u2019lov'] };
+      o.methods.forEach(k => {
+        const b = el('button', 'bmeth ' + k); b.type = 'button';
+        b.innerHTML = '<span class="bi">' + names[k][1] + '</span><span>' + names[k][0] + '<small>' + names[k][2] + '</small></span>';
+        b.onclick = () => payInvoice(k, b, o);
+        box.appendChild(b);
+      });
+      let cardPane = null;
+      if (o.card && !o.pending) {
+        cardPane = buildCardPane(o);
+        if (o.methods.length) {
+          cardPane.hidden = true;
+          const b = el('button', 'bmeth'); b.type = 'button';
+          b.innerHTML = '<span class="bi">\ud83d\udcb3</span><span>Karta orqali<small>O\u2019tkazma qilib, chek rasmini yuborasiz</small></span>';
+          b.onclick = () => { haptic(); cardPane.hidden = !cardPane.hidden; if (!cardPane.hidden) cardPane.scrollIntoView({ behavior: 'smooth', block: 'center' }); };
+          box.appendChild(b);
+        } else box.appendChild(el('div', 'note', 'Click va Payme hozircha ulanmagan \u2014 karta orqali to\u2019lang va chek yuboring.'));
+        box.appendChild(cardPane);
+      } else if (!o.methods.length && !o.pending) box.appendChild(el('div', 'bstat', '\u26a0\ufe0f To\u2019lov usuli hali sozlanmagan. Adminga murojaat qiling.'));
+    }
+
+    function buildCardPane(o) {
+      const c = el('div', 'bcard');
+      c.appendChild(el('div', 'ct', '\ud83d\udcb3 ' + o.card.title));
+      const cn = el('div', 'cn'); cn.appendChild(el('b', null, cardFmt(o.card.number)));
+      cn.appendChild(mkBtn('', '\ud83d\udccb Nusxa', () => copyText(o.card.number, 'Karta raqami nusxalandi')));
+      c.appendChild(cn);
+      if (o.card.holder) { const r1 = el('div', 'cr'); r1.append(el('span', null, 'Karta egasi'), el('b', null, o.card.holder)); c.appendChild(r1); }
+      const r2 = el('div', 'cr'); r2.append(el('span', null, 'O\u2019tkazma summasi'), el('b', null, priceTxt(o.price))); c.appendChild(r2);
+      c.appendChild(el('div', 'note', '1) Aynan shu summani yuqoridagi kartaga o\u2019tkazing.\n2) To\u2019lov cheki (skrinshot) rasmini tanlang.\n3) \u00abYuborish\u00bb ni bosing \u2014 admin tekshirib tasdiqlaydi.')).style.whiteSpace = 'pre-line';
+      const fi = el('input'); fi.type = 'file'; fi.accept = 'image/*'; fi.hidden = true;
+      const pv = el('div', 'pv', '\ud83e\uddfe');
+      const pick = mkBtn('btn2', '\ud83e\uddfe Chek rasmini tanlash', () => fi.click());
+      const row = el('div', 'bchk'); row.append(pv, pick); c.append(fi, row);
+      const send = mkBtn('btn main full', '\ud83d\udce4 Yuborish', async () => {
+        const f = fi.files && fi.files[0];
+        if (!f) { toast('Avval chek rasmini tanlang'); return; }
+        if (f.size > 10 * 1024 * 1024) { toast('Rasm 10 MB dan katta bo\u2019lmasin'); return; }
+        send.disabled = true; send.textContent = '\u23f3 Yuborilmoqda...';
+        try {
+          const fd = new FormData(); fd.append('t', m.t === 's' ? 's' : 'm'); fd.append('id', String(m.id)); fd.append('file', f, f.name || 'chek.jpg');
+          const resp = await fetch('/api/pay/check', { method: 'POST', headers: { 'X-Init-Data': initData }, body: fd });
+          if (!resp.ok) { let msg = ''; try { msg = (await resp.json()).error || ''; } catch (e) {} throw new Error(msg || 'Yuborib bo\u2019lmadi'); }
+          haptic('medium');
+          box.replaceChildren(el('div', 'bstat ok', '\u2705 Chek yuborildi! Admin tekshirgach bot sizga xabar yuboradi va kontent ochiladi. \u23f3'));
+          const bb = mkBtn('btn2 full', 'Yopish', closeSheet); bb.style.marginTop = '12px'; box.appendChild(bb);
+        } catch (e) { toast(e.message || 'Xatolik', 3600); send.disabled = false; send.textContent = '\ud83d\udce4 Yuborish'; }
+      });
+      send.style.marginTop = '12px'; send.disabled = true;
+      fi.onchange = () => {
+        const f = fi.files && fi.files[0];
+        if (!f) { send.disabled = true; return; }
+        pv.textContent = ''; pv.style.backgroundImage = 'url(' + URL.createObjectURL(f) + ')'; send.disabled = false;
+        pick.textContent = '\ud83d\udd04 Boshqa rasm tanlash';
+      };
+      c.appendChild(send);
+      return c;
+    }
+
+    async function payInvoice(k, btn, o) {
+      if (btn.disabled) return; btn.disabled = true; haptic('medium');
+      try {
+        if (!tg.openInvoice) { toast('Telegram ilovasini yangilang yoki karta orqali to\u2019lang', 3600); btn.disabled = false; return; }
+        const r = await api('/api/pay/invoice', { t: m.t === 's' ? 's' : 'm', id: m.id, method: k });
+        tg.openInvoice(r.link, async st => {
+          btn.disabled = false;
+          if (st === 'paid') {
+            toast('\u2705 To\u2019lov qabul qilindi!', 2400);
+            for (let i = 0; i < 12 && gen === sheetGen; i++) {
+              await new Promise(res => setTimeout(res, 1200));
+              try { const n = await load(); if (n.owned) return; } catch (e) {}
+            }
+          } else if (st === 'failed') toast('To\u2019lov amalga oshmadi', 2600);
+        });
+      } catch (e) { toast(errMsg(e), 3200); btn.disabled = false; }
+    }
+  }
+  /* Bot tugmasi (?buy=m:12 yoki s:5): to'g'ridan-to'g'ri sotib olish oynasi */
+  async function buyDeepLink() {
+    let v = ''; try { v = new URLSearchParams(location.search).get('buy') || ''; } catch (e) {}
+    const mm = /^([ms]):(\d+)$/.exec(v); if (!mm) return;
+    try { const d = await api('/api/' + (mm[1] === 's' ? 'series/' : 'movie/') + mm[2]); d.t = mm[1]; renderSheetOpen(d); } catch (e) { toast('Kontent topilmadi'); }
+  }
+  function renderSheetOpen(d) { if (d.pay === 'pro' && !d.owned) openBuy(d); else openSheet(d); }
 
   /* ═════════════ VIP (foydalanuvchi) ═════════════ */
   const VIP = { on: false, until: 0, bot: '', plans: [] };
@@ -2199,9 +2371,34 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       r.append(g, sw); panel.append(h, r);
       return { r, sw, h };
     };
-    const paid = payRow('paid', '👑 Pullik (PRO)', 'Pullik rejim yoqilganda faqat VIP ko\'ra oladi. Belgilanmasa — tekin.', on => {
+    if (init && init.pro_price) init.pro_on = '1';
+    let proRow = null;
+    const paid = payRow('paid', '👑 VIP', 'Pullik rejim yoqilganda faqat VIP obunachilar ko\'ra oladi. Belgilanmasa — tekin.', on => {
       if (free) { free.r.hidden = !on; if (!on) { free.h.value = ''; free.sw.classList.remove('on'); } }
+      if (on && proRow && proRow.h.value) proRow.sw.click();   // VIP va PRO bir vaqtda bo'lmaydi
     });
+    proRow = payRow('pro_on', '💎 PRO — alohida sotiladi', 'Faqat sotib olgan ko\'radi (VIP obuna yetmaydi). Narx kiritiladi, har bir kino/serial alohida.', on => {
+      pp.hidden = !on;
+      if (on && paid.h.value) paid.sw.click();
+      if (!on) { F.pro_price.value = ''; F.pro_card.value = ''; }
+    });
+    const pp = el('div'); pp.hidden = !proRow.h.value;
+    pp.appendChild(el('label', 'lbl', 'PRO narxi (so\'m) *'));
+    F.pro_price = inp('25000', { inputMode: 'numeric', maxLength: 10 });
+    F.pro_price.value = (init && init.pro_price) || '';
+    F.pro_price.addEventListener('input', () => { F.pro_price.value = F.pro_price.value.replace(/\D/g, ''); });
+    pp.appendChild(F.pro_price);
+    pp.appendChild(el('label', 'lbl', 'Qaysi kartaga to\'lanadi'));
+    F.pro_card = el('select', 'inp');
+    F.pro_card.appendChild(new Option('Birinchi faol karta', ''));
+    pp.appendChild(F.pro_card);
+    const cn = el('div', 'note', ''); pp.appendChild(cn);
+    api('/api/admin/cards/pick').then(d => {
+      d.items.forEach(c => F.pro_card.appendChild(new Option(c.title, String(c.id))));
+      F.pro_card.value = (init && init.pro_card) || '';
+      cn.textContent = d.items.length ? 'Click/Payme ulangan bo\'lsa, xaridorga ular ham ko\'rinadi.' : '⚠️ Karta yo\'q. Sozlamalar → «To\'lov kartalari» bo\'limida karta qo\'shing.';
+    }).catch(() => {});
+    panel.appendChild(pp);
     if (opts.noQuality) {
       free = payRow('free_eps', '🎁 Tekin qo\'shish', 'Dastlabki 3 qism hammaga tekin, qolgani pullik. O\'chiq bo\'lsa — hamma qism pullik.', null);
       free.r.hidden = !paid.h.value;
@@ -2452,7 +2649,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       const g = el('div', 'grow');
       g.appendChild(el('div', 'nm', m.title + (m.year ? ' (' + m.year + ')' : '')));
       g.appendChild(el('div', 'sm', 'kod: ' + m.code + (isS ? ' • ' + m.eps + ' qism' : '') + ' • 👁 ' + m.views + (m.genre ? ' • ' + m.genre : '')));
-      if (m.pay === 'pro') { const t = el('span', 'tag pro'); t.innerHTML = si('crown') + 'PRO'; t.style.marginTop = '5px'; t.style.display = 'inline-block'; g.appendChild(t); }
+      if (m.pay === 'pro' || m.pay === 'vip') { const t = el('span', 'tag ' + m.pay); t.innerHTML = (m.pay === 'vip' ? si('crown') + 'VIP' : '\ud83d\udc8e PRO' + (m.price ? ' \u00b7 ' + priceTxt(m.price) : '')); t.style.marginTop = '5px'; t.style.display = 'inline-block'; g.appendChild(t); }
       r.appendChild(g);
       r.appendChild(mkBtn('ico' + (m.cv ? '' : ' warn'), '✏️', async () => {
         try {
@@ -2916,6 +3113,48 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       open.onclick = () => { haptic(); list.hidden = !list.hidden; };
       dz.appendChild(list);
       wrap.appendChild(dz);
+    }
+
+    if (can('settings')) {
+      const cp = el('div', 'panel pcards');
+      cp.appendChild(el('h3', null, '💳 To\'lov kartalari (PRO uchun)'));
+      cp.appendChild(el('div', 'note', 'Kartani bir marta shu yerda qo\'shasiz, keyin har bir PRO kontentda ro\'yxatdan tanlaysiz. Xaridor tanlangan kartani ko\'radi va chek yuboradi; chek bosh va starshiy adminlarga boradi.'));
+      const list = el('div'); cp.appendChild(list);
+      const stat = el('div', 'note'); cp.appendChild(stat);
+      const form = el('div'); form.hidden = true;
+      const fT = el('input', 'inp'); fT.placeholder = 'Nomi (masalan: Humo — Alisher)'; fT.maxLength = 40;
+      const fN = el('input', 'inp'); fN.placeholder = 'Karta raqami: 8600 0000 0000 0000'; fN.inputMode = 'numeric'; fN.maxLength = 23;
+      fN.addEventListener('input', () => { fN.value = cardFmt(fN.value).slice(0, 23); });
+      const fH = el('input', 'inp'); fH.placeholder = 'Karta egasi (ixtiyoriy)'; fH.maxLength = 40;
+      [fT, fN, fH].forEach(x => { x.style.marginTop = '8px'; form.appendChild(x); });
+      let editId = 0, editActive = true;
+      const fb = el('div', 'two'); fb.style.marginTop = '10px';
+      const fSave = mkBtn('btn main', '💾 Saqlash', async () => {
+        try { await api('/api/admin/cards', { id: editId, title: fT.value, number: fN.value, holder: fH.value, active: editActive }); haptic('medium'); toast('✅ Saqlandi', 1500); form.hidden = true; await draw(); }
+        catch (e) { toast(errMsg(e), 3200); }
+      });
+      fb.append(fSave, mkBtn('btn2', 'Bekor', () => { form.hidden = true; }));
+      form.appendChild(fb);
+      const openForm = c => { editId = c ? c.id : 0; editActive = c ? c.active : true; fT.value = c ? c.title : ''; fN.value = c ? cardFmt(c.number) : ''; fH.value = c ? c.holder : ''; form.hidden = false; fT.focus(); };
+      async function draw() {
+        let d = { items: [], click: false, payme: false };
+        try { d = await api('/api/admin/cards'); } catch (e) {}
+        list.replaceChildren();
+        if (!d.items.length) list.appendChild(el('div', 'note', 'Hozircha karta yo\'q.'));
+        d.items.forEach(c => {
+          const r = el('div', 'pc' + (c.active ? '' : ' off')), g = el('div', 'grow');
+          g.appendChild(el('div', 'nm', c.title)); g.appendChild(el('div', 'sm', cardFmt(c.number) + (c.holder ? ' • ' + c.holder : '') + (c.active ? '' : ' • o\'chirilgan')));
+          r.appendChild(g);
+          r.appendChild(mkBtn('ico', '✏️', () => openForm(c)));
+          r.appendChild(mkBtn('ico', c.active ? '⏸' : '▶️', async () => { try { await api('/api/admin/cards', { ...c, active: !c.active }); await draw(); } catch (e) { toast(errMsg(e)); } }));
+          r.appendChild(mkBtn('ico warn', '🗑', async () => { if (!confirm('«' + c.title + '» kartasi o\'chirilsinmi? Unga bog\'langan kontent birinchi faol kartaga o\'tadi.')) return; try { await api('/api/admin/cards/delete', { id: c.id }); await draw(); } catch (e) { toast(errMsg(e)); } }));
+          list.appendChild(r);
+        });
+        stat.textContent = 'Click: ' + (d.click ? '✅ ulangan' : '❌ ulanmagan') + ' • Payme: ' + (d.payme ? '✅ ulangan' : '❌ ulanmagan') + (d.click || d.payme ? '' : '\nUlanmagan bo\'lsa, xaridorga faqat karta orqali chek yuborish chiqadi.');
+        stat.style.whiteSpace = 'pre-line';
+      }
+      const add = mkBtn('btn2', '➕ Karta qo\'shish', () => openForm(null)); add.style.marginTop = '10px';
+      cp.append(add, form); wrap.appendChild(cp); await draw();
     }
 
     if (can('settings')) {
@@ -3560,12 +3799,13 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     const M = { at: 0, busy: false, vis: false };
     const list = el('div', 't2-mem'); pane.appendChild(list);
     const draw = d => {
-      list.replaceChildren(); onCount(d.total);
+      M.last = d; list.replaceChildren(); onCount(d.total);
       list.appendChild(el('div', 't2-memhd', '🟢 Hozir xonada: ' + d.viewers + ' · jami: ' + d.total));
       d.items.forEach(u => {
         const r = el('div', 't2-m t2-in'), av = el('div', 'av'); av.style.background = 'hsl(' + nameHue(u.id) + ',55%,42%)';
         av.textContent = (u.name || '?').trim().charAt(0).toUpperCase(); av.appendChild(el('i', u.online ? 'on' : ''));
         const nm = el('div', 'nm'), b = el('b', '', u.name);
+        if (TH.hall && TH.hall.vmic && TH.hall.vmic.has(u.id)) b.appendChild(el('span', 'bd mic', '🎤'));
         if (u.host) b.appendChild(el('span', 'bd', '👑 EGA')); else if (u.staff) b.appendChild(el('span', 'bd adm', 'ADMIN')); else if (u.vip) b.appendChild(el('span', 'bd vip', 'VIP'));
         nm.appendChild(b); nm.appendChild(el('small', '', u.id === d.me ? 'Siz' : u.online ? 'Onlayn' : 'Oflayn'));
         r.append(av, nm);
@@ -3581,6 +3821,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
         list.appendChild(r);
       });
     };
+    M.redraw = () => { if (M.last) draw(M.last); };
     M.refresh = async () => {
       if (M.busy) return; M.busy = true; M.at = Date.now();
       try { draw(await api('/api/theatre/room/' + rid + '/members')); } catch (e) { if (!list.children.length) list.appendChild(el('div', 'note', errMsg(e))); }
@@ -3673,7 +3914,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
     H.fsOn = () => fsOn; H.fsOff = fsExit;
     window.addEventListener('resize', fsFit); window.addEventListener('orientationchange', fsFit);
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && fsOn && !swapping && TH.hall === H) fsExit(); });
-    H.cleanup = () => { fsExit(); window.removeEventListener('resize', fsFit); window.removeEventListener('orientationchange', fsFit); };
+    H.cleanup = () => { try { H.vcleanup && H.vcleanup(); } catch (e) {} fsExit(); window.removeEventListener('resize', fsFit); window.removeEventListener('orientationchange', fsFit); };
     vbox.append(video, ov, rxl, pill, ctl, fsTog, fsPanel, fsRx); stage.append(vbox, el('div', 'seats'));
     const info = el('div', 'hinfo'), nm = el('div', 'nm'), sm = el('div', 'sm'); info.append(nm, sm);
     main.append(stage, info);
@@ -3689,6 +3930,112 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       (d.i || []).forEach(([u, e]) => { if (u !== CH.uid) setTimeout(() => spawn(e), 70 * k++); });
       Object.entries(d.m || {}).forEach(([e, n]) => { for (let j = 0; j < Math.min(n, 4); j++) setTimeout(() => spawn(e), 70 * k++); });
     };
+    /* ── Ovozli suhbat (xonalarda): 🎤 mikrofon — gapirish, 🎧 naushnik — eshitish. Avto: mikrofon o'chiq, naushnik yoniq.
+       Ovoz serverdan o'tmaydi: gapiruvchi har bir tinglovchiga to'g'ridan-to'g'ri (WebRTC) oqim yuboradi; server faqat signal beradi. ── */
+    const VI = {
+      mic: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
+      micx: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M3 3l18 18"/></svg>',
+      ear: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="7" rx="2" fill="currentColor"/><rect x="16.5" y="14" width="4.5" height="7" rx="2" fill="currentColor"/></svg>',
+      earx: '<svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4.5" height="7" rx="2"/><rect x="16.5" y="14" width="4.5" height="7" rx="2"/><path d="M3 3l18 18"/></svg>'
+    };
+    const V = H.voice = { mic: false, ears: true, stream: null, out: new Map(), inn: new Map(), micSet: new Set(), earSet: new Set(), pend: new Map(), auds: new Map(), btns: [], warned: false, ice: [{ urls: 'stun:stun.l.google.com:19302' }] };
+    H.vmic = V.micSet;
+    const vOK = !pub && !ghost && !!window.RTCPeerConnection;
+    const vPaint = () => V.btns.forEach(b => {
+      const mic = b.dataset.k === 'mic', on = mic ? V.mic : V.ears;
+      b.classList.toggle('on', on); b.innerHTML = mic ? (on ? VI.mic : VI.micx) : (on ? VI.ear : VI.earx);
+      b.setAttribute('aria-label', mic ? (on ? 'Mikrofonni o\u2019chirish' : 'Mikrofonni yoqish') : (on ? 'Naushnikni o\u2019chirish' : 'Naushnikni yoqish'));
+    });
+    const vSig = (to, kind, data) => api('/api/theatre/voice/signal', { room: cfg.room, to, kind, data }).catch(() => {});
+    const vClose = (map, u) => {
+      const pc = map.get(u); if (!pc) return; map.delete(u); try { pc.close(); } catch (e) {}
+      if (map === V.inn) { const a = V.auds.get(u); if (a) { a.srcObject = null; V.auds.delete(u); } }
+    };
+    const vStopMic = () => { if (V.stream) { V.stream.getTracks().forEach(t => t.stop()); V.stream = null; } };
+    function vReconcile() {
+      const me = CH.uid;
+      if (V.mic && V.stream) V.earSet.forEach(u => { if (u !== me && !V.out.has(u)) vCall(u); });
+      [...V.out.keys()].forEach(u => { if (!V.mic || !V.earSet.has(u)) vClose(V.out, u); });
+      [...V.inn.keys()].forEach(u => { if (!V.ears || !V.micSet.has(u)) vClose(V.inn, u); });
+    }
+    function vSnap(d) {
+      V.micSet = new Set(d.mic || []); V.earSet = new Set(d.ears || []); H.vmic = V.micSet;
+      vReconcile(); if (mem && mem.last) mem.redraw();
+    }
+    function vPost() {
+      if (!vOK) return Promise.resolve();
+      return api('/api/theatre/voice/state', { room: cfg.room, mic: V.mic, ears: V.ears }).then(d => { if (d.ice) V.ice = d.ice; vSnap(d); })
+        .catch(e => { if (V.mic && /gapira|mute|Real vaqt/.test(e.msg || '')) { V.mic = false; vStopMic(); vPaint(); vReconcile(); } if (e.msg) toast(e.msg, 3400); });
+    }
+    const watch = (pc, map, u) => {
+      pc.onconnectionstatechange = () => {
+        if ((pc.connectionState === 'failed' || pc.connectionState === 'closed') && map.get(u) === pc) { vClose(map, u); setTimeout(vReconcile, 2500); }
+      };
+    };
+    async function vCall(u) {
+      const pc = new RTCPeerConnection({ iceServers: V.ice }); V.out.set(u, pc); watch(pc, V.out, u);
+      V.stream.getTracks().forEach(t => pc.addTrack(t, V.stream));
+      pc.onicecandidate = e => { if (e.candidate) vSig(u, 'ice', { c: e.candidate, r: 'o' }); };
+      try { await pc.setLocalDescription(await pc.createOffer()); vSig(u, 'offer', { s: pc.localDescription }); } catch (e) { vClose(V.out, u); }
+    }
+    function vPlay(u, stream) {
+      let a = V.auds.get(u); if (!a) { a = new Audio(); a.autoplay = true; a.playsInline = true; V.auds.set(u, a); }
+      a.srcObject = stream; a.muted = !V.ears; const p = a.play(); if (p && p.catch) p.catch(() => {});
+    }
+    const vFlush = async (key, pc) => { const q = V.pend.get(key) || []; V.pend.delete(key); for (const c of q) { try { await pc.addIceCandidate(c); } catch (e) {} } };
+    async function vSignal(d) {
+      const from = d.f, key = (d.d && d.d.r || '') + ':' + from;
+      try {
+        if (d.k === 'offer') {
+          if (!V.ears || !V.micSet.has(from)) return;
+          vClose(V.inn, from);
+          const pc = new RTCPeerConnection({ iceServers: V.ice }); V.inn.set(from, pc); watch(pc, V.inn, from);
+          pc.ontrack = e => vPlay(from, e.streams[0] || new MediaStream([e.track]));
+          pc.onicecandidate = e => { if (e.candidate) vSig(from, 'ice', { c: e.candidate, r: 'a' }); };
+          await pc.setRemoteDescription(d.d.s); await vFlush('o:' + from, pc);
+          await pc.setLocalDescription(await pc.createAnswer()); vSig(from, 'answer', { s: pc.localDescription });
+        } else if (d.k === 'answer') {
+          const pc = V.out.get(from); if (!pc) return;
+          await pc.setRemoteDescription(d.d.s); await vFlush('a:' + from, pc);
+        } else if (d.k === 'ice') {
+          const pc = d.d.r === 'o' ? V.inn.get(from) : V.out.get(from);
+          if (pc && pc.remoteDescription) await pc.addIceCandidate(d.d.c);
+          else { const q = V.pend.get(key) || []; q.push(d.d.c); V.pend.set(key, q.slice(-40)); }
+        }
+      } catch (e) {}
+    }
+    async function vToggleMic() {
+      if (pub) { toast('Ommaviy teatrda ovozli suhbat yo\u2019q (juda ko\u2019p odam). Do\u2019stlar bilan xonada ishlaydi', 3600); return; }
+      if (!V.mic) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { toast('Bu qurilmada mikrofon ishlamaydi. Telegramni yangilang', 3600); return; }
+        try { V.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } }); }
+        catch (e) { toast('\ud83c\udfa4 Mikrofonga ruxsat berilmadi. Telefon/Telegram sozlamalarida ruxsat bering', 4200); return; }
+        V.mic = true; vPaint();
+        if (!V.warned) { V.warned = true; toast('\ud83c\udfa7 Naushnik taqing \u2014 aks holda kino ovozi hamma bilan aralashib ketadi', 4200); }
+        await vPost();
+      } else { V.mic = false; vStopMic(); vPaint(); vReconcile(); vPost(); }
+    }
+    function vToggleEars() {
+      if (pub) { toast('Ommaviy teatrda ovozli suhbat yo\u2019q (juda ko\u2019p odam). Do\u2019stlar bilan xonada ishlaydi', 3600); return; }
+      V.ears = !V.ears; vPaint(); V.auds.forEach(a => { a.muted = !V.ears; });
+      if (!V.ears) [...V.inn.keys()].forEach(u => vClose(V.inn, u));
+      vPost();
+    }
+    const mkVoice = box => {
+      if (!vOK && !pub) return;
+      [['mic', vToggleMic], ['ear', vToggleEars]].forEach(([k, fn]) => {
+        const b = el('button', 't2-vb ' + k); b.type = 'button'; b.dataset.k = k; b.onclick = () => { haptic(); fn(); }; V.btns.push(b); box.appendChild(b);
+      });
+      vPaint();
+    };
+    const vResume = () => V.auds.forEach(a => { if (a.paused) a.play().catch(() => {}); });
+    document.addEventListener('pointerdown', vResume, { passive: true });
+    H.vcleanup = () => vCleanup();
+    const vCleanup = () => {
+      document.removeEventListener('pointerdown', vResume);
+      if (vOK) { try { fetch('/api/theatre/voice/state', { method: 'POST', keepalive: true, headers: { 'X-Init-Data': initData, 'Content-Type': 'application/json' }, body: JSON.stringify({ room: cfg.room, mic: false, ears: false }) }).catch(() => {}); } catch (e) {} }
+      vStopMic(); [...V.out.keys()].forEach(u => vClose(V.out, u)); [...V.inn.keys()].forEach(u => vClose(V.inn, u));
+    };
     if (!ghost) {
       const rx = el('div', 't2-rx'); let lastRx = 0;
       const allBtns = [];
@@ -3702,7 +4049,8 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       });
       mkRx(rx); mkRx(fsRx);
       rx.appendChild(el('div', 'sp'));
-      if (host && !pub) { const iv = el('button', 'inv'); iv.innerHTML = '👥 Taklif'; iv.onclick = () => { haptic(); thInvite(cfg.room); }; rx.appendChild(iv); }
+      mkVoice(rx); mkVoice(fsRx);
+      if (host && !pub) { const iv = el('button', 'inv'); iv.innerHTML = '👥<span class="lbl"> Taklif</span>'; iv.onclick = () => { haptic(); thInvite(cfg.room); }; rx.appendChild(iv); }
       main.appendChild(rx);
     }
 
@@ -3872,7 +4220,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       if (!window.EventSource) return;
       let es; try { es = H.es = new EventSource('/api/theatre/events?room=' + encodeURIComponent(pub ? 'pub' : cfg.room) + '&a=' + encodeURIComponent(initData)); } catch (e) { return; }
       const on = (n, f) => es.addEventListener(n, ev => { if (TH.hall !== H) return; let d = {}; try { d = JSON.parse(ev.data); } catch (x) {} f(d); });
-      es.onopen = () => { if (TH.hall !== H) return; chat.poll(false); if (!pub) poll(); if (mem) mem.soon(); };
+      es.onopen = () => { if (TH.hall !== H) return; chat.poll(false); if (!pub) poll(); if (mem) mem.soon(); vPost(); };
       on('hello', d => { if (d.v != null) setViewers(d.v); });
       on('v', d => { setViewers(d.n); if (mem) mem.soon(); });
       on('chat', d => chat.push(d));
@@ -3881,6 +4229,8 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       on('slot', () => { clearTimeout(H.bt); H.bt = setTimeout(pollPub, Math.random() * 2000); });
       on('state', d => { if (pub || host) return; H.offset = d.now - Date.now() / 1000; H.base = { pos: d.pos, now: d.now, playing: d.playing }; sync(); });
       on('roster', () => { if (mem) mem.soon(); });
+      on('vstate', vSnap);
+      on('vsig', vSignal);
       on('kicked', d => { if (d.uid === CH.uid) { toast('Siz xonadan chiqarib yuborildingiz', 3800); thBack(); } else if (mem) mem.soon(); });
       on('closed', () => { stopVideo(); setOv('err', 'Xona yopildi'); try { es.close(); } catch (e) {} toast('Xona egasi xonani yopdi', 3000); });
     }
@@ -4107,7 +4457,7 @@ body{padding-bottom:calc(104px + env(safe-area-inset-bottom))}
       TH.on = !!me.theatre; $('#thBtn').hidden = !TH.on;
             if (me.admin) { ME = Object.assign(ME, me); $('#gear').hidden = false; applyTabs(); }
       applyVip(me.vip); layoutTop();
-      thDeepLink();
+      thDeepLink(); buyDeepLink();
     } catch (e) {}
     try {
       const q0 = (new URLSearchParams(location.search).get('q') || '').trim().slice(0, 80);

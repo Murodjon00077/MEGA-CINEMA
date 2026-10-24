@@ -313,6 +313,35 @@ async def _migrate() -> None:
              decided_by INTEGER,
              decided_at INTEGER)"""
     )
+    await _db.execute(
+        """CREATE TABLE IF NOT EXISTS pay_cards(
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             title TEXT NOT NULL,
+             number TEXT NOT NULL,
+             holder TEXT NOT NULL DEFAULT '',
+             active INTEGER NOT NULL DEFAULT 1,
+             created_at INTEGER NOT NULL)"""
+    )
+    await _db.execute(
+        """CREATE TABLE IF NOT EXISTS purchases(
+             user_id INTEGER NOT NULL,
+             t TEXT NOT NULL,
+             item_id INTEGER NOT NULL,
+             pay_id INTEGER NOT NULL DEFAULT 0,
+             at INTEGER NOT NULL,
+             PRIMARY KEY(user_id, t, item_id))"""
+    )
+    # PRO (alohida sotiladigan kontent): narx va qaysi kartaga to'lanishi; to'lovlarda tur/kontent/karta
+    for tbl, tcols in (("movies", cols), ("series", sercols)):
+        if "pro_price" not in tcols:
+            await _db.execute(f"ALTER TABLE {tbl} ADD COLUMN pro_price INTEGER NOT NULL DEFAULT 0")
+        if "pro_card" not in tcols:
+            await _db.execute(f"ALTER TABLE {tbl} ADD COLUMN pro_card INTEGER NOT NULL DEFAULT 0")
+    paycols = {r["name"] for r in await _all("PRAGMA table_info(payments)")}
+    for col, ddl in (("kind", "TEXT NOT NULL DEFAULT 'vip'"), ("item_t", "TEXT NOT NULL DEFAULT ''"),
+                     ("item_id", "INTEGER NOT NULL DEFAULT 0"), ("card_id", "INTEGER NOT NULL DEFAULT 0")):
+        if col not in paycols:
+            await _db.execute(f"ALTER TABLE payments ADD COLUMN {col} {ddl}")
     if "num" not in sercols:
         await _db.execute("ALTER TABLE series ADD COLUMN num INTEGER")
     # Raqami yo'q seriallarga HAR TUR uchun alohida tartib raqami beriladi: s.1, s.2 / m.1 / a.1 ...
@@ -513,8 +542,9 @@ async def add_movie(d: dict) -> int:
         return await _run(
             """INSERT INTO movies(title, description, year, genre, genre_lc, country, language, quality,
                                   file_id, file_type, poster_id, search_text, created_at, src_chat, src_msg, status,
-                                  kind, series_id, ep, cover_id, num, file_size, duration, mime, premiere_at, paid)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                  kind, series_id, ep, cover_id, num, file_size, duration, mime, premiere_at, paid,
+                                  pro_price, pro_card)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (
                 d["title"], d.get("description", ""), d.get("year", ""), d.get("genre", ""), genre_lc,
                 d.get("country", ""), d.get("language", ""), d.get("quality", ""),
@@ -522,7 +552,7 @@ async def add_movie(d: dict) -> int:
                 d.get("src_chat"), d.get("src_msg"), d.get("status", "live"),
                 d.get("kind", "kino"), d.get("series_id") or None, d.get("ep"), d.get("cover", ""), num,
                 int(d.get("file_size") or 0), int(d.get("duration") or 0), d.get("mime") or "", d.get("premiere_at"),
-                1 if d.get("paid") else 0,
+                1 if d.get("paid") else 0, int(d.get("pro_price") or 0), int(d.get("pro_card") or 0),
             ),
         )
 
@@ -594,9 +624,10 @@ async def replace_movie_meta(mid: int, d: dict) -> None:
     search, genre_lc = _derive(cur)
     await _run(
         """UPDATE movies SET title=?, description=?, year=?, genre=?, genre_lc=?, country=?,
-                             language=?, quality=?, search_text=?, paid=? WHERE id=?""",
+                             language=?, quality=?, search_text=?, paid=?, pro_price=?, pro_card=? WHERE id=?""",
         (cur["title"], cur["description"], cur["year"], cur["genre"], genre_lc, cur["country"],
-         cur["language"], cur["quality"], search, 1 if d.get("paid") else 0, mid),
+         cur["language"], cur["quality"], search, 1 if d.get("paid") else 0,
+         int(d.get("pro_price") or 0), int(d.get("pro_card") or 0), mid),
     )
 
 
@@ -707,12 +738,12 @@ async def add_series(d: dict) -> int:
         num = await _next_num(kind)
         sid = await _run(
             """INSERT INTO series(kind, title, description, year, genre, genre_lc, country, language,
-                                  poster_id, search_text, created_at, num, cover_id, paid, free_eps)
-               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                                  poster_id, search_text, created_at, num, cover_id, paid, free_eps, pro_price, pro_card)
+               VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
             (kind, d["title"], d.get("description", ""), d.get("year", ""), d.get("genre", ""),
              genre_lc, d.get("country", ""), d.get("language", ""), d.get("poster", ""), search,
              int(time.time()), num, d.get("cover", ""), 1 if d.get("paid") else 0,
-             int(d.get("free_eps") or 0) if d.get("paid") else 0),
+             int(d.get("free_eps") or 0) if d.get("paid") else 0, int(d.get("pro_price") or 0), int(d.get("pro_card") or 0)),
         )
         _NUM[sid] = num
         _BYNUM[(kind, num)] = sid
@@ -737,10 +768,11 @@ async def update_series_meta(sid: int, d: dict) -> None:
     search, genre_lc = _derive(cur)
     await _db.execute(
         """UPDATE series SET title=?, description=?, year=?, genre=?, genre_lc=?, country=?, language=?,
-                             search_text=?, paid=?, free_eps=? WHERE id=?""",
+                             search_text=?, paid=?, free_eps=?, pro_price=?, pro_card=? WHERE id=?""",
         (cur["title"], cur["description"], cur["year"], cur["genre"], genre_lc, cur["country"],
          cur["language"], search, 1 if d.get("paid") else 0,
-         int(d.get("free_eps") or 0) if d.get("paid") else 0, sid),
+         int(d.get("free_eps") or 0) if d.get("paid") else 0,
+         int(d.get("pro_price") or 0), int(d.get("pro_card") or 0), sid),
     )
     await _db.execute(
         """UPDATE movies SET title=?, description=?, year=?, genre=?, genre_lc=?, country=?, language=?,
@@ -798,11 +830,12 @@ async def search_series(q: str, limit: int = 5):
 _ITEMS = """
 SELECT 'm' AS t, m.id AS id, m.id AS fk, m.title AS title, m.year AS year, m.genre AS genre, m.genre_lc AS genre_lc,
        m.country AS country, m.quality AS quality, m.views AS views, m.poster_id AS poster_id, m.kind AS kind,
-       m.search_text AS search_text, m.created_at AS created_at, 0 AS eps, m.cover_id AS cover_id, m.num AS num, m.paid AS paid
+       m.search_text AS search_text, m.created_at AS created_at, 0 AS eps, m.cover_id AS cover_id, m.num AS num, m.paid AS paid,
+       m.pro_price AS pro_price
 FROM movies m WHERE m.status='live' AND m.series_id IS NULL
 UNION ALL
 SELECT 's', s.id, -s.id, s.title, s.year, s.genre, s.genre_lc, s.country, '', v.views, s.poster_id, s.kind,
-       s.search_text, v.last, v.n, s.cover_id, NULL, s.paid
+       s.search_text, v.last, v.n, s.cover_id, NULL, s.paid, s.pro_price
 FROM series s JOIN (
   SELECT series_id, SUM(views) AS views, MAX(created_at) AS last, COUNT(*) AS n
   FROM movies WHERE status='live' AND series_id IS NOT NULL GROUP BY series_id
@@ -911,9 +944,9 @@ async def hero_top_all(limit: int = 6):
 
 
 async def hero_random(paid: int, limit: int = 10):
-    """Tasodifiy kontent: paid=1 — pullik, paid=0 — tekin (muqovasi borlari birinchi)."""
+    """Tasodifiy kontent: paid=1 — pullik (VIP yoki PRO), paid=0 — tekin (muqovasi borlari birinchi)."""
     return await _all(
-        f"{_CTE}SELECT i.* FROM items i WHERE COALESCE(i.paid, 0) = ? "
+        f"{_CTE}SELECT i.* FROM items i WHERE (COALESCE(i.paid, 0) = 1 OR COALESCE(i.pro_price, 0) > 0) = ? "
         "ORDER BY (i.cover_id != '') DESC, RANDOM() LIMIT ?", (1 if paid else 0, limit))
 
 
@@ -1524,11 +1557,56 @@ async def vip_counts() -> dict:
     }
 
 
-async def pay_add(uid: int, days: int, amount: int, method: str, status: str = "pending", proof: str = "") -> int:
+async def pay_add(uid: int, days: int, amount: int, method: str, status: str = "pending", proof: str = "",
+                  kind: str = "vip", item_t: str = "", item_id: int = 0, card_id: int = 0) -> int:
     return await _run(
-        "INSERT INTO payments(user_id, days, amount, method, status, proof, created_at) VALUES(?,?,?,?,?,?,?)",
-        (uid, days, amount, method, status, proof, int(time.time())),
+        "INSERT INTO payments(user_id, days, amount, method, status, proof, created_at, kind, item_t, item_id, card_id) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?)",
+        (uid, days, amount, method, status, proof, int(time.time()), kind, item_t, item_id, card_id),
     )
+
+
+async def pay_set_proof(pid: int, proof: str) -> None:
+    await _run("UPDATE payments SET proof=? WHERE id=?", (proof, pid))
+
+
+async def pay_pending_item(uid: int, t: str, item_id: int) -> int:
+    return (await _one("SELECT COUNT(*) c FROM payments WHERE user_id=? AND kind='pro' AND item_t=? AND item_id=? "
+                       "AND status='pending'", (uid, t, item_id)))["c"]
+
+
+# ───────────── PRO: to'lov kartalari va xaridlar ─────────────
+async def card_list(active_only: bool = False):
+    return await _all("SELECT * FROM pay_cards" + (" WHERE active=1" if active_only else "") + " ORDER BY id")
+
+
+async def card_get(cid: int):
+    return await _one("SELECT * FROM pay_cards WHERE id=?", (cid,))
+
+
+async def card_save(cid: int, title: str, number: str, holder: str, active: bool) -> int:
+    if cid and await card_get(cid):
+        await _run("UPDATE pay_cards SET title=?, number=?, holder=?, active=? WHERE id=?",
+                   (title, number, holder, 1 if active else 0, cid))
+        return cid
+    return await _run("INSERT INTO pay_cards(title, number, holder, active, created_at) VALUES(?,?,?,?,?)",
+                      (title, number, holder, 1 if active else 0, int(time.time())))
+
+
+async def card_delete(cid: int) -> None:
+    await _db.execute("DELETE FROM pay_cards WHERE id=?", (cid,))
+    await _db.execute("UPDATE movies SET pro_card=0 WHERE pro_card=?", (cid,))
+    await _db.execute("UPDATE series SET pro_card=0 WHERE pro_card=?", (cid,))
+    await _db.commit()
+
+
+async def buy_has(uid: int, t: str, item_id: int) -> bool:
+    return bool(await _one("SELECT 1 FROM purchases WHERE user_id=? AND t=? AND item_id=?", (uid, t, item_id)))
+
+
+async def buy_add(uid: int, t: str, item_id: int, pay_id: int = 0) -> None:
+    await _run("INSERT OR IGNORE INTO purchases(user_id, t, item_id, pay_id, at) VALUES(?,?,?,?,?)",
+               (uid, t, item_id, pay_id, int(time.time())))
 
 
 async def pay_get(pid: int):

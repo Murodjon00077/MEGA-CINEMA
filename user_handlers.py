@@ -153,7 +153,7 @@ async def cmd_start(m: Message, command: CommandObject, bot: Bot, state: FSMCont
         return
     if mid:
         res = await svc.deliver(bot, m.chat.id, m.from_user.id, mid)
-        if res in ("ok", "vip"):
+        if res in ("ok", "vip", "pro"):
             return
     await send_welcome(bot, m.chat.id, m.from_user)
 
@@ -206,7 +206,7 @@ async def cb_check(c: CallbackQuery, bot: Bot):
         return
     if mid:
         res = await svc.deliver(bot, chat_id, c.from_user.id, mid)
-        if res in ("ok", "vip"):
+        if res in ("ok", "vip", "pro"):
             return
     await send_welcome(bot, chat_id, c.from_user)
 

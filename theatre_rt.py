@@ -25,6 +25,8 @@ PENDING_MAX = 240        # bir kanalda bitta oynada yig'iladigan eng ko'p reaksi
 MAX_SUBS_USER = 3        # bitta foydalanuvchining bir vaqtdagi ulanishlari (bir nechta qurilma/tab)
 MAX_SUBS_TOTAL = 2500    # butun server bo'yicha ulanishlar chegarasi (xotira himoyasi)
 QUEUE_SIZE = 80          # har bir ulanish navbati
+MAX_SPEAKERS = 4         # xonada bir vaqtda mikrofoni yoqiq odamlar (har biri hamma tinglovchiga alohida oqim yuboradi)
+SIG_LIMIT = 80           # bir foydalanuvchining 10 soniyadagi ovoz signallari (WebRTC) chegarasi
 
 
 def fmt(event: str, data) -> bytes:
@@ -63,6 +65,8 @@ class Hub:
         self._pending: dict[str, list] = {}
         self._last_react: dict[int, float] = {}
         self._last_v: dict[str, int] = {}
+        self.voice: dict[str, dict[str, set]] = {}   # kanal -> {'mic': gapirayotganlar, 'ears': eshitayotganlar}
+        self._sig: dict[int, list] = {}
         # theatre.py ulaydi (aylanma import bo'lmasligi uchun)
         self.on_seen = lambda key, uid: None
         self.on_gone = lambda key, uid: None
@@ -97,6 +101,7 @@ class Hub:
             self.total = max(0, self.total - 1)
             if not sub.ghost and not any(s.uid == sub.uid and not s.ghost for s in group):
                 self.on_gone(sub.key, sub.uid)
+                self.voice_drop(sub.key, sub.uid)
             if not group:
                 self.subs.pop(sub.key, None)
                 self._pending.pop(sub.key, None)
@@ -148,6 +153,46 @@ class Hub:
                 s.q.put_nowait(None)
             except asyncio.QueueFull:
                 s.close()
+
+    # ── ovozli suhbat: kim gapiryapti (mic) va kim eshityapti (ears). Ovoz serverdan o'tmaydi — foydalanuvchilar o'zaro WebRTC ──
+    def voice_snapshot(self, key: str) -> dict:
+        v = self.voice.get(key)
+        return {"mic": sorted(v["mic"]), "ears": sorted(v["ears"])} if v else {"mic": [], "ears": []}
+
+    def voice_set(self, key: str, uid: int, mic: bool, ears: bool) -> str:
+        """'ok' | 'full' (gapirayotganlar chegarasi to'lgan)."""
+        v = self.voice.setdefault(key, {"mic": set(), "ears": set()})
+        if mic and uid not in v["mic"] and len(v["mic"]) >= MAX_SPEAKERS:
+            return "full"
+        before = (set(v["mic"]), set(v["ears"]))
+        (v["mic"].add if mic else v["mic"].discard)(uid)
+        (v["ears"].add if ears else v["ears"].discard)(uid)
+        if before != (v["mic"], v["ears"]):
+            self.publish(key, "vstate", self.voice_snapshot(key))
+        return "ok"
+
+    def voice_drop(self, key: str, uid: int) -> None:
+        v = self.voice.get(key)
+        if not v:
+            return
+        had = uid in v["mic"] or uid in v["ears"]
+        v["mic"].discard(uid)
+        v["ears"].discard(uid)
+        if not v["mic"] and not v["ears"]:
+            self.voice.pop(key, None)
+        if had:
+            self.publish(key, "vstate", self.voice_snapshot(key))
+
+    def allow_sig(self, uid: int) -> bool:
+        now = time.monotonic()
+        w = self._sig.get(uid)
+        if not w or now - w[0] > 10:
+            self._sig[uid] = [now, 1]
+            if len(self._sig) > 3000:
+                self._sig = {u: x for u, x in self._sig.items() if now - x[0] < 10}
+            return True
+        w[1] += 1
+        return w[1] <= SIG_LIMIT
 
     # ── reaksiyalar ──
     def allow(self, uid: int) -> bool:

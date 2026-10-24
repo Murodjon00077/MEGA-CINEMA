@@ -11,7 +11,7 @@ from urllib.parse import parse_qsl, quote
 
 from aiohttp import web
 from aiogram.exceptions import TelegramAPIError
-from aiogram.types import BufferedInputFile
+from aiogram.types import BufferedInputFile, LabeledPrice
 
 import config
 import db
@@ -99,7 +99,7 @@ def _cv(cover_id: str) -> str:
 
 def _label(pay: str) -> str:
     """Katalog kartochkasidagi lenta: pullik bo'lsa PRO, aks holda FREE (TOP/NEW faqat slayderda)."""
-    return "pro" if pay == "pro" else "free"
+    return pay if pay in ("pro", "vip") else "free"
 
 
 def _brief(r) -> dict:
@@ -116,6 +116,7 @@ def _brief(r) -> dict:
         "cv": _cv(r["cover_id"]) if "cover_id" in r.keys() else "",
         "pay": vip.pay_tag(r),
         "lbl": _label(vip.pay_tag(r)),
+        "price": int(r["pro_price"]) if "pro_price" in r.keys() and r["pro_price"] else 0,
     }
 
 
@@ -153,6 +154,8 @@ _AUDIT = {
     "/api/admin/broadcast": ("broadcast", "Hammaga xabar yuborildi"),
     "/api/admin/vip/config": ("vip", "VIP tariflari o'zgartirildi"),
     "/api/admin/vip/grant": ("vip", "VIP berildi / olib tashlandi"),
+    "/api/admin/cards": ("vip", "To'lov kartasi saqlandi"),
+    "/api/admin/cards/delete": ("vip", "To'lov kartasi o'chirildi"),
     "/api/admin/theatre/premiere": ("theatre", "Premyera belgilandi"),
     "/api/admin/theatre/cancel": ("theatre", "Premyera bekor qilindi"),
     "/api/admin/theatre/rebuild": ("theatre", "Teatr jadvali qayta tuzildi"),
@@ -412,6 +415,9 @@ async def api_movie(request: web.Request):
     d = _brief(movie)
     d["description"] = movie["description"]
     d["language"] = movie["language"]
+    info = await vip.pro_info(movie)
+    if info:
+        d["owned"] = perms.is_staff(user["id"]) or await db.buy_has(user["id"], info["t"], info["id"])
     return web.json_response(d)
 
 
@@ -426,7 +432,10 @@ async def api_series(request: web.Request):
     if not eps:
         raise web.HTTPNotFound(reason="not found")
     watched = await db.watched_episodes(user["id"], ser["id"])
+    pro_price = ser["pro_price"] if vip.ON else 0
+    owned = bool(pro_price) and (is_admin or await db.buy_has(user["id"], "s", ser["id"]))
     return web.json_response({
+        "price": pro_price, "owned": owned,
         "last": watched[0]["mid"] if watched else None,
         "seen": [w["mid"] for w in watched],
         "t": "s", "id": ser["id"], "fk": -ser["id"], "kind": ser["kind"],
@@ -435,9 +444,10 @@ async def api_series(request: web.Request):
         "language": ser["language"], "description": ser["description"], "quality": "",
         "views": sum(e["views"] for e in eps), "poster": bool(ser["poster_id"]),
         "cv": _cv(ser["cover_id"]),
-        "pay": ("pro" if ser["paid"] else "free") if vip.ON else "",
+        "pay": ("pro" if pro_price else "vip" if ser["paid"] else "free") if vip.ON else "",
         "eps": [{"id": e["id"], "ep": e["ep"], "views": e["views"], "live": e["status"] == "live",
-                 "pro": bool(vip.ON and ser["paid"] and (e["ep"] or 0) > (ser["free_eps"] or 0))} for e in eps],
+                 "pro": bool(pro_price and not owned) or bool(vip.ON and not pro_price and ser["paid"]
+                                                              and (e["ep"] or 0) > (ser["free_eps"] or 0))} for e in eps],
     })
 
 
@@ -869,7 +879,9 @@ async def api_admin_movie_get(request: web.Request):
         raise web.HTTPNotFound(reason="not found")
     _kind_ok(user, m["kind"])
     return web.json_response({"movie": {"id": m["id"], "code": db.movie_code(m), **{k: m[k] or "" for k in db.META_FIELDS}, "cv": _cv(m["cover_id"]),
-                                         "paid": "1" if m["paid"] else ""}})
+                                         "paid": "1" if m["paid"] else "",
+                                         "pro_price": str(m["pro_price"]) if m["pro_price"] else "",
+                                         "pro_card": str(m["pro_card"]) if m["pro_card"] else ""}})
 
 
 async def api_admin_series_get(request: web.Request):
@@ -882,7 +894,9 @@ async def api_admin_series_get(request: web.Request):
     return web.json_response({
         "series": {"id": ser["id"], "kind": ser["kind"], "code": db.series_code(ser["kind"], ser["id"]),
                    **{k: (ser[k] if k in ser.keys() else "") or "" for k in db.META_FIELDS}, "cv": _cv(ser["cover_id"]),
-                   "paid": "1" if ser["paid"] else "", "free_eps": "1" if ser["free_eps"] else ""},
+                   "paid": "1" if ser["paid"] else "", "free_eps": "1" if ser["free_eps"] else "",
+                   "pro_price": str(ser["pro_price"]) if ser["pro_price"] else "",
+                   "pro_card": str(ser["pro_card"]) if ser["pro_card"] else ""},
         "eps": [{"id": e["id"], "ep": e["ep"], "live": e["status"] == "live"} for e in eps],
     })
 
@@ -980,6 +994,15 @@ def _clean_meta(body: dict) -> dict:
         out["cover"] = _clean_cover(body.get("cover"))
     paid = str(body.get("paid") or "").strip().lower() in ("1", "true")
     out["paid"] = 1 if paid else 0
+    # PRO: alohida sotiladigan kontent (narx > 0). PRO bo'lsa VIP belgisi o'chadi — bittasi tanlanadi.
+    raw_price = re.sub(r"\D", "", str(body.get("pro_price") or ""))
+    price = int(raw_price) if raw_price else 0
+    if price and not 1000 <= price <= 100_000_000:
+        raise ValueError("PRO narxi 1 000 dan 100 000 000 so'mgacha bo'lsin")
+    out["pro_price"], out["pro_card"] = price, (int(re.sub(r"\D", "", str(body.get("pro_card") or "")) or 0) if price else 0)
+    if price:
+        paid = False
+        out["paid"] = 0
     # Serialda «tekin qo'shish»: pullik bo'lsa dastlabki FREE_EPS qism tekin
     out["free_eps"] = vip.FREE_EPS if paid and str(body.get("free_eps") or "").strip().lower() in ("1", "true") else 0
     if not out.get("title"):
@@ -1248,6 +1271,149 @@ async def api_admin_vip_grant(request: web.Request):
     except Exception:
         pass
     return web.json_response({"ok": True, "until": until})
+
+
+# ───────────── PRO: dona sotib olish (Click / Payme / chek), to'lov kartalari ─────────────
+MAX_CHECK = 10 * 1024 * 1024
+
+
+def _card_view(c) -> dict:
+    return {"id": c["id"], "title": c["title"], "number": c["number"], "holder": c["holder"], "active": bool(c["active"])}
+
+
+async def _pro_card(info: dict):
+    """Kontent uchun tanlangan karta (faol bo'lsa), yo'qsa — birinchi faol karta."""
+    c = await db.card_get(info["card"]) if info["card"] else None
+    if c and c["active"]:
+        return c
+    rows = await db.card_list(active_only=True)
+    return rows[0] if rows else None
+
+
+async def _pro_item(user: dict, t: str, item_id: int):
+    if t not in ("m", "s"):
+        raise web.HTTPNotFound(reason="not found")
+    info = await vip.pro_info_of(t, item_id)
+    if not info:
+        raise web.HTTPNotFound(reason="Bu kontent sotilmaydi")
+    owned = perms.is_staff(user["id"]) or await db.buy_has(user["id"], t, item_id)
+    return info, owned
+
+
+async def api_pay_options(request: web.Request):
+    user = _auth(request)
+    t, item_id = request.query.get("t", ""), int(request.query.get("id", 0) or 0)
+    info, owned = await _pro_item(user, t, item_id)
+    card = await _pro_card(info)
+    return web.json_response({
+        "t": t, "id": item_id, "title": info["title"], "price": info["price"], "owned": owned,
+        "methods": list(vip.provider_tokens()),
+        "card": {"title": card["title"], "number": card["number"], "holder": card["holder"]} if card else None,
+        "pending": await db.pay_pending_item(user["id"], t, item_id),
+    })
+
+
+async def api_pay_invoice(request: web.Request):
+    """Click / Payme: Telegram hisob-kitob havolasi yaratiladi; ilova `openInvoice` bilan ochadi."""
+    user = _auth(request)
+    body = await request.json()
+    t, item_id, method = str(body.get("t") or ""), int(body.get("id") or 0), str(body.get("method") or "")
+    info, owned = await _pro_item(user, t, item_id)
+    if owned:
+        return _bad("Bu kontent sizda allaqachon bor")
+    token = vip.provider_tokens().get(method)
+    if not token:
+        return _bad("Bu to'lov usuli hozir ulanmagan")
+    try:
+        link = await request.app["bot"].create_invoice_link(
+            title=info["title"][:32], description=f"{config.BOT_TITLE}: «{info['title']}» — PRO"[:250],
+            payload=f"pro:{t}:{item_id}:{info['price']}:{method}", provider_token=token, currency="UZS",
+            prices=[LabeledPrice(label="PRO", amount=info["price"] * 100)])
+    except TelegramAPIError as e:
+        logging.error("Hisob havolasi yaratilmadi (%s): %s", method, e)
+        return _bad("To'lovni boshlab bo'lmadi. Keyinroq urinib ko'ring")
+    return web.json_response({"link": link})
+
+
+async def api_pay_check(request: web.Request):
+    """Karta orqali to'lov: chek rasmi bosh va starshiy adminlarga ketadi, ular tasdiqlasa kontent ochiladi."""
+    user = _auth(request)
+    fields, data = {}, None
+    reader = await request.multipart()
+    async for part in reader:
+        if part.name == "file" and part.filename:
+            if not (part.headers.get("Content-Type") or "").lower().startswith("image/"):
+                return _bad("Faqat rasm (skrinshot) yuboring")
+            buf = bytearray()
+            while True:
+                chunk = await part.read_chunk(256 * 1024)
+                if not chunk:
+                    break
+                buf.extend(chunk)
+                if len(buf) > MAX_CHECK:
+                    return _bad("Rasm 10 MB dan katta bo'lmasligi kerak")
+            data = bytes(buf) or None
+        elif part.name in ("t", "id"):
+            fields[part.name] = (await part.text())[:20]
+    if not data:
+        return _bad("Chek rasmini tanlang")
+    t, item_id = fields.get("t", ""), int(fields.get("id") or 0)
+    info, owned = await _pro_item(user, t, item_id)
+    if owned:
+        return _bad("Bu kontent sizda allaqachon bor")
+    card = await _pro_card(info)
+    if not card:
+        return _bad("Karta orqali to'lov hozir sozlanmagan")
+    if await db.pay_pending_item(user["id"], t, item_id):
+        return _bad("Bu kontent uchun chek allaqachon yuborilgan. Admin tekshirishini kuting")
+    if await db.pay_pending_of(user["id"]) >= 3:
+        return _bad("Sizda tekshirilmagan cheklar ko'p. Admin ko'rib chiqquncha kuting")
+    from vip_handlers import submit_pro_check
+    ok = await submit_pro_check(request.app["bot"], user, info, card, data)
+    if not ok:
+        return _bad("Chekni adminlarga yetkazib bo'lmadi. Keyinroq urinib ko'ring")
+    return web.json_response({"ok": True})
+
+
+def _clean_card(body: dict) -> tuple[str, str, str]:
+    title = re.sub(r"\s+", " ", str(body.get("title") or "")).strip()[:40]
+    number = re.sub(r"\D", "", str(body.get("number") or ""))
+    holder = re.sub(r"\s+", " ", str(body.get("holder") or "")).strip()[:40]
+    if not title:
+        raise ValueError("Karta nomini kiriting (masalan: Humo — Alisher)")
+    if not 13 <= len(number) <= 19:
+        raise ValueError("Karta raqami noto'g'ri (16 ta raqam)")
+    return title, number, holder
+
+
+async def api_admin_cards(request: web.Request):
+    _admin(request, "settings")
+    return web.json_response({"items": [_card_view(c) for c in await db.card_list()],
+                              "click": bool(config.PAYMENT_TOKEN_CLICK), "payme": bool(config.PAYMENT_TOKEN_PAYME)})
+
+
+async def api_admin_cards_pick(request: web.Request):
+    """Kontent formasida karta tanlash uchun: faqat nomlar (raqamsiz)."""
+    _admin(request, "add")
+    return web.json_response({"items": [{"id": c["id"], "title": c["title"]} for c in await db.card_list(active_only=True)]})
+
+
+async def api_admin_cards_save(request: web.Request):
+    _admin(request, "settings")
+    body = await request.json()
+    try:
+        title, number, holder = _clean_card(body)
+    except ValueError as e:
+        return _bad(str(e))
+    cid = await db.card_save(int(body.get("id") or 0), title, number, holder, bool(body.get("active", True)))
+    return web.json_response({"ok": True, "id": cid})
+
+
+async def api_admin_cards_delete(request: web.Request):
+    _admin(request, "settings")
+    body = await request.json()
+    await db.card_delete(int(body.get("id") or 0))
+    return web.json_response({"ok": True})
 
 
 # ───────────── Muqova rasmi yuklash ─────────────
@@ -1723,6 +1889,52 @@ async def api_th_react(request: web.Request):
     return web.json_response({"ok": True})
 
 
+def _ice_servers() -> list:
+    out = [{"urls": ["stun:stun.l.google.com:19302", "stun:stun1.l.google.com:19302"]}]
+    if config.TURN_URLS:
+        out.append({"urls": config.TURN_URLS, "username": config.TURN_USER, "credential": config.TURN_PASS})
+    return out
+
+
+async def api_th_voice_state(request: web.Request):
+    """Ovozli suhbat: mikrofon (gapirish) va naushnik (eshitish) holati. Avto: mikrofon o'chiq, naushnik yoniq."""
+    _th_on()
+    user = _auth(request)
+    body = await request.json()
+    room = str(body.get("room") or "").strip().upper()
+    if not room or room == "PUB":
+        return _bad("Ovozli suhbat faqat shaxsiy xonalarda ishlaydi")
+    uid = user["id"]
+    if not rt.hub.has(room, uid):  # ruxsat real vaqt oqimi ulanganda tekshirilgan (a'zo, chiqarilmagan)
+        return _bad("Real vaqt ulanishi yo'q. Xonani qayta oching")
+    mic, ears = bool(body.get("mic")), bool(body.get("ears", True))
+    if mic:
+        rm = await db.th_room_get(room)
+        muted = await _muted_resp(user, rm["owner"] if rm else None)
+        if muted:
+            return muted
+    if rt.hub.voice_set(room, uid, mic, ears) == "full":
+        return _bad(f"Bir vaqtda {rt.MAX_SPEAKERS} kishi gapira oladi. Biroz kuting")
+    return web.json_response({"ok": True, **rt.hub.voice_snapshot(room), "ice": _ice_servers()})
+
+
+async def api_th_voice_signal(request: web.Request):
+    """WebRTC signal (offer/answer/ice) — faqat xonadagi boshqa a'zoga uzatiladi. Ovozning o'zi serverdan o'tmaydi."""
+    _th_on()
+    user = _auth(request)
+    body = await request.json()
+    room, to, kind = str(body.get("room") or "").strip().upper(), int(body.get("to") or 0), str(body.get("kind") or "")
+    data = body.get("data")
+    if kind not in ("offer", "answer", "ice") or not to or to == user["id"] or len(json.dumps(data or "")) > 12000:
+        return _bad("Noto'g'ri signal")
+    if not rt.hub.allow_sig(user["id"]):
+        return web.json_response({"ok": False})
+    if not rt.hub.has(room, user["id"]) or not rt.hub.has(room, to):
+        return web.json_response({"ok": False})
+    rt.hub.send_to(room, to, "vsig", {"f": user["id"], "k": kind, "d": data})
+    return web.json_response({"ok": True})
+
+
 async def _th_room_for_members(request: web.Request, user: dict):
     """Xonani qaytaradi (a'zo yoki 👻 bosh admin bo'lsa), aks holda xato."""
     rid = request.match_info["id"].upper()
@@ -2068,6 +2280,8 @@ def make_app(bot) -> web.Application:
     r.add_post("/api/theatre/remind", api_th_remind)
     r.add_post("/api/theatre/react", api_th_react)
     r.add_get("/api/theatre/events", api_th_events)
+    r.add_post("/api/theatre/voice/state", api_th_voice_state)
+    r.add_post("/api/theatre/voice/signal", api_th_voice_signal)
     r.add_get("/api/theatre/room/{id}/invite", api_th_room_invite)
     r.add_get("/api/theatre/room/{id}/members", api_th_room_members)
     r.add_post("/api/theatre/room/{id}/kick", api_th_room_kick)
@@ -2125,6 +2339,13 @@ def make_app(bot) -> web.Application:
     r.add_get("/api/admin/vip", api_admin_vip)
     r.add_post("/api/admin/vip/config", api_admin_vip_config)
     r.add_post("/api/admin/vip/grant", api_admin_vip_grant)
+    r.add_get("/api/pay/options", api_pay_options)
+    r.add_post("/api/pay/invoice", api_pay_invoice)
+    r.add_post("/api/pay/check", api_pay_check)
+    r.add_get("/api/admin/cards", api_admin_cards)
+    r.add_get("/api/admin/cards/pick", api_admin_cards_pick)
+    r.add_post("/api/admin/cards", api_admin_cards_save)
+    r.add_post("/api/admin/cards/delete", api_admin_cards_delete)
     return app
 
 

@@ -9,7 +9,7 @@ from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup, default_state
 from aiogram.types import CallbackQuery, InlineKeyboardButton as B, InlineKeyboardMarkup, LabeledPrice
-from aiogram.types import Message, PreCheckoutQuery
+from aiogram.types import BufferedInputFile, Message, PreCheckoutQuery
 
 import config
 import audit
@@ -151,8 +151,26 @@ def _parse_payload(payload: str):
         return None
 
 
+def _parse_pro(payload: str):
+    try:
+        tag, t, item_id, price, method = payload.split(":")
+        return (t, int(item_id), int(price), method) if tag == "pro" and t in ("m", "s") else None
+    except ValueError:
+        return None
+
+
 @router.pre_checkout_query()
 async def pre_checkout(q: PreCheckoutQuery):
+    pro = _parse_pro(q.invoice_payload)
+    if pro:
+        info = await vip.pro_info_of(pro[0], pro[1])
+        ok = bool(info) and info["price"] == pro[2] and q.total_amount == pro[2] * 100 and q.currency == "UZS" \
+            and not await db.buy_has(q.from_user.id, pro[0], pro[1])
+        if ok:
+            await q.answer(ok=True)
+        else:
+            await q.answer(ok=False, error_message="Narx o'zgargan yoki kontent sizda allaqachon bor. Ilovani qayta oching.")
+        return
     parsed = _parse_payload(q.invoice_payload)
     ok = bool(parsed) and vip.ON and any(
         p["days"] == parsed[0] and p["price"] == parsed[1] for p in await vip.plans()
@@ -166,6 +184,21 @@ async def pre_checkout(q: PreCheckoutQuery):
 @router.message(F.successful_payment)
 async def paid(m: Message, bot: Bot):
     sp = m.successful_payment
+    pro = _parse_pro(sp.invoice_payload)
+    if pro:
+        t, item_id, price, method = pro
+        pid = await db.pay_add(m.from_user.id, 0, price, method, status="ok", proof=sp.telegram_payment_charge_id or "",
+                               kind="pro", item_t=t, item_id=item_id)
+        await db.buy_add(m.from_user.id, t, item_id, pid)
+        info = await vip.pro_info_of(t, item_id)
+        title = info["title"] if info else "kontent"
+        btn = vip.app_button("▶️ Ochish", buy=f"{t}:{item_id}")
+        await m.answer(f"🎉 <b>To'lov qabul qilindi!</b>\n\n💎 <b>{html.escape(title)}</b> endi sizniki. "
+                       "Ilovada oching va botga yuboring.",
+                       reply_markup=_kb([[btn]]) if btn else None)
+        await _notify_full(bot, f"💰 <b>{METHOD_LABEL.get(method, method)}</b> — PRO xarid: {_user_line(m.from_user)} — "
+                                f"{html.escape(title)}, {vip.money(price)}")
+        return
     parsed = _parse_payload(sp.invoice_payload)
     if not parsed:
         return
@@ -224,6 +257,35 @@ async def _send_check(bot: Bot, fid: str, cap: str, kb: InlineKeyboardMarkup) ->
     return sent
 
 
+async def submit_pro_check(bot: Bot, user: dict, info: dict, card, data: bytes) -> bool:
+    """Mini App'dan kelgan chek rasmini bosh va starshiy adminlarga (yoki chek kanaliga) tasdiqlash tugmalari bilan yuboradi."""
+    pid = await db.pay_add(user["id"], 0, info["price"], "check", kind="pro", item_t=info["t"], item_id=info["id"],
+                           card_id=card["id"])
+    name = html.escape(" ".join(x for x in (user.get("first_name"), user.get("last_name")) if x) or "—")
+    line = name + (f" (@{user['username']})" if user.get("username") else "") + f" • <code>{user['id']}</code>"
+    cap = (f"🧾 <b>PRO chek #{pid}</b>\n\n{line}\n💎 <b>{html.escape(info['title'])}</b>"
+           f"{' (serial)' if info['t'] == 's' else ''}\nSumma: <b>{vip.money(info['price'])}</b>\n"
+           f"Karta: {html.escape(card['title'])}")
+    kb = _kb([[B(text="✅ Tasdiqlash", callback_data=f"vipok:{pid}"), B(text="❌ Rad etish", callback_data=f"viprej:{pid}")]])
+    photo = BufferedInputFile(data, filename="chek.jpg")
+    dests = ([config.VIP_CHECK_CHANNEL] if config.VIP_CHECK_CHANNEL else []) + [u for u in _full_admins()]
+    fid, sent = "", 0
+    for i, dest in enumerate(dests):
+        try:
+            msg = await bot.send_photo(dest, fid or photo, caption=cap, reply_markup=kb)
+            fid = fid or msg.photo[-1].file_id
+            sent += 1
+            if i == 0 and config.VIP_CHECK_CHANNEL:
+                break  # kanal bor bo'lsa — hamma tasdiqlovchilar o'sha yerda
+        except Exception as e:
+            logging.warning("PRO chek yuborilmadi (%s): %s", dest, e)
+    if not sent:
+        await db.pay_decide(pid, "rejected", 0)
+        return False
+    await db.pay_set_proof(pid, fid)
+    return True
+
+
 @router.message(StateFilter(VipCheck.wait), F.photo)
 async def check_photo(m: Message, bot: Bot, state: FSMContext):
     data = await state.get_data()
@@ -258,6 +320,32 @@ async def _decide(c: CallbackQuery, bot: Bot, ok: bool) -> None:
     if not await db.pay_decide(pid, "ok" if ok else "rejected", c.from_user.id):
         return await c.answer("Bu chek allaqachon ko'rib chiqilgan", show_alert=True)
     uid = pay["user_id"]
+    if pay["kind"] == "pro":
+        info = await vip.pro_info_of(pay["item_t"], pay["item_id"])
+        title = info["title"] if info else "kontent"
+        if ok:
+            await db.buy_add(uid, pay["item_t"], pay["item_id"], pid)
+            btn = vip.app_button("▶️ Ochish", buy=f"{pay['item_t']}:{pay['item_id']}")
+            msg, mark = (f"🎉 <b>Chekingiz tasdiqlandi!</b>\n\n💎 <b>{html.escape(title)}</b> endi sizniki.",
+                         f"✅ Tasdiqlandi — {html.escape(c.from_user.full_name or '')}")
+        else:
+            btn = None
+            msg, mark = (f"❌ <b>Chekingiz tasdiqlanmadi.</b>\n\n«{html.escape(title)}» uchun to'lov topilmadi. "
+                         "Xato bo'lsa adminga murojaat qiling yoki ilovada qaytadan urinib ko'ring.",
+                         f"❌ Rad etildi — {html.escape(c.from_user.full_name or '')}")
+        try:
+            await bot.send_message(uid, msg, reply_markup=_kb([[btn]]) if btn else None)
+        except Exception:
+            pass
+        await audit.log(c.from_user.id, c.from_user.full_name or "", "vip",
+                        "PRO chek tasdiqlandi" if ok else "PRO chek rad etildi",
+                        f"chek #{pid} · foydalanuvchi {uid} · {title} · {vip.money(pay['amount'])}")
+        await c.answer("Tayyor")
+        try:
+            await c.message.edit_caption(caption=(c.message.caption or "") + f"\n\n{mark}", reply_markup=None)
+        except TelegramBadRequest:
+            pass
+        return
     if ok:
         until = await db.vip_grant(uid, pay["days"])
         note = f"👑 VIP faol: <b>{vip.until_text(until)}</b> gacha." if until else ""

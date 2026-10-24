@@ -104,7 +104,7 @@ async def send_movie(bot: Bot, chat_id: int, user_id: int, movie) -> None:
 
 
 async def deliver(bot: Bot, chat_id: int, user_id: int, movie_id: int) -> str:
-    """Kinoni yuboradi. Natija: 'ok' | 'sub' | 'vip' (pullik) | 'nf' (topilmadi) | 'err' (yuborib bo'lmadi)."""
+    """Kinoni yuboradi. Natija: 'ok' | 'sub' | 'vip' (VIP kerak) | 'pro' (sotib olish kerak) | 'nf' (topilmadi) | 'err' (yuborib bo'lmadi)."""
     movie = await db.get_movie(movie_id)
     if not movie or (movie["status"] != "live" and not perms.is_staff(user_id)):
         return "nf"
@@ -112,9 +112,10 @@ async def deliver(bot: Bot, chat_id: int, user_id: int, movie_id: int) -> str:
     if bad:
         await ask_subscribe(bot, chat_id, bad, movie_id)
         return "sub"
-    if not await vip.can_watch(user_id, movie):  # pullik kontent, foydalanuvchi VIP emas
-        await vip.send_paywall(bot, chat_id, movie)
-        return "vip"
+    acc = await vip.access(user_id, movie)
+    if acc != "ok":  # pullik kontent: VIP kerak yoki alohida sotib olish (PRO)
+        await vip.send_paywall(bot, chat_id, movie, acc)
+        return acc
     try:
         await send_movie(bot, chat_id, user_id, movie)
     except (TelegramBadRequest, TelegramForbiddenError) as e:

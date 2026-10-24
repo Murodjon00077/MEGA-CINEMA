@@ -1,4 +1,8 @@
-"""Pullik (VIP) rejim: yoqish/o'chirish, tariflar, kontent qulfi, VIP holati.
+"""Pullik rejim: yoqish/o'chirish, tariflar, kontent qulfi, VIP holati va PRO (dona sotiladigan) kontent.
+
+• VIP (`paid` belgisi): VIP obunachilar ko'radi.
+• PRO (`pro_price` > 0): kontent alohida sotiladi — faqat sotib olganlar (va adminlar) ko'radi; VIP obuna bunga yetmaydi.
+  Serial/multfilm/anime uchun narx butun serialga (barcha qismlar) bitta.
 
 • Rejim o'chiq bo'lsa hamma narsa tekin; yoqilsa «pullik» deb belgilanganlar darrov pullik bo'ladi.
 • Yakka kino/multfilm/anime — o'zining `paid` belgisi. Qismli kontent — serialning `paid` belgisi;
@@ -10,7 +14,7 @@ import time
 from datetime import datetime, timedelta, timezone
 
 from aiogram.types import InlineKeyboardButton as B
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, WebAppInfo
 
 import config
 import db
@@ -109,17 +113,54 @@ async def locked(movie) -> bool:
     return bool(movie["paid"])
 
 
+async def pro_info(movie) -> dict | None:
+    """PRO kontent bo'lsa: {t, id, price, card, title}; aks holda None (rejim o'chiq bo'lsa ham None)."""
+    if not ON:
+        return None
+    if movie["series_id"]:
+        ser = await db.get_series(movie["series_id"])
+        if ser and ser["pro_price"] > 0:
+            return {"t": "s", "id": ser["id"], "price": ser["pro_price"], "card": ser["pro_card"], "title": ser["title"]}
+        return None
+    if movie["pro_price"] > 0:
+        return {"t": "m", "id": movie["id"], "price": movie["pro_price"], "card": movie["pro_card"], "title": movie["title"]}
+    return None
+
+
+async def pro_info_of(t: str, item_id: int) -> dict | None:
+    """Katalog kartochkasi (t='m' kino / t='s' qismli) bo'yicha PRO ma'lumoti."""
+    if not ON:
+        return None
+    row = await (db.get_series(item_id) if t == "s" else db.get_movie(item_id))
+    if not row or row["pro_price"] <= 0:
+        return None
+    return {"t": t, "id": item_id, "price": row["pro_price"], "card": row["pro_card"], "title": row["title"]}
+
+
+async def access(uid: int, movie) -> str:
+    """'ok' — ko'ra oladi; 'pro' — sotib olish kerak; 'vip' — VIP kerak."""
+    if perms.is_staff(uid):
+        return "ok"
+    info = await pro_info(movie)
+    if info:
+        return "ok" if await db.buy_has(uid, info["t"], info["id"]) else "pro"
+    if await locked(movie):
+        return "ok" if await is_vip(uid) else "vip"
+    return "ok"
+
+
 async def can_watch(uid: int, movie) -> bool:
-    if not await locked(movie):
-        return True
-    return perms.is_staff(uid) or await is_vip(uid)
+    return await access(uid, movie) == "ok"
 
 
 def pay_tag(r) -> str:
-    """Katalog lentasi: 'pro' | 'free' | '' (rejim o'chiq bo'lsa lenta yo'q)."""
+    """Katalog lentasi: 'pro' (alohida sotiladi) | 'vip' | 'free' | '' (rejim o'chiq bo'lsa lenta yo'q)."""
     if not ON:
         return ""
-    return "pro" if ("paid" in r.keys() and r["paid"]) else "free"
+    keys = r.keys()
+    if "pro_price" in keys and r["pro_price"]:
+        return "pro"
+    return "vip" if ("paid" in keys and r["paid"]) else "free"
 
 
 # ───────────── Botdagi tugmalar ─────────────
@@ -127,8 +168,25 @@ def menu_kb() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[[B(text="👑 VIP olish", callback_data="vip:menu")]])
 
 
-async def send_paywall(bot, chat_id: int, movie) -> None:
+def app_button(text: str, **params) -> B | None:
+    if not config.WEBAPP_URL:
+        return None
+    qs = "&".join(f"{k}={v}" for k, v in params.items())
+    return B(text=text, web_app=WebAppInfo(url=config.WEBAPP_URL + ("&" if "?" in config.WEBAPP_URL else "?") + qs))
+
+
+async def send_paywall(bot, chat_id: int, movie, acc: str = "vip") -> None:
     ep = f" — {movie['ep']}-qism" if movie["series_id"] and movie["ep"] else ""
+    if acc == "pro":
+        info = await pro_info(movie)
+        if info:
+            text = (f"💎 <b>{_esc(info['title'])}</b>{ep} — <b>PRO kontent</b>\n\n"
+                    f"Bu kontent alohida sotiladi: <b>{money(info['price'])}</b>"
+                    + (" (butun serial, barcha qismlar)" if info["t"] == "s" else "") + ".\n"
+                    "Sotib olish ilova ichida: Click, Payme yoki karta orqali chek yuborib.")
+            btn = app_button("💎 Sotib olish", buy=f"{info['t']}:{info['id']}")
+            await bot.send_message(chat_id, text, reply_markup=InlineKeyboardMarkup(inline_keyboard=[[btn]]) if btn else None)
+            return
     text = (
         f"👑 <b>{_esc(movie['title'])}</b>{ep} — <b>pullik kontent</b>\n\n"
         "Buni faqat <b>VIP</b> obunachilar ko'ra oladi. VIP bilan barcha pullik kino va seriallar, "

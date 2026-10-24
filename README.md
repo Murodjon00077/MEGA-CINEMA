@@ -97,3 +97,16 @@ Eslatma: treyler Telegram orqali 20 MB gacha yuklab olinadi; serverda `ffmpeg` (
 - **Taklif havolasi**: xona egasi «👥 Taklif» → `https://t.me/<bot>?start=r_KOD`. Bot xona oynasini ochuvchi tugma yuboradi. Parol havolaga qo'shilmaydi; parolli xonaga parolsiz kirib bo'lmaydi.
 - **Reaksiyalar** 🔥😂😮❤️👏 va **ishtirokchilar**: real vaqt SSE (`/api/theatre/events`) orqali; reaksiyalar bazaga yozilmaydi, 0.45 s oynada paketlanadi. Xona egasi foydalanuvchini chiqara oladi (u qayta kira olmaydi).
 - Yangi sozlama kerak emas (.env o'zgarmaydi). Proksi/hosting SSE ni buferlamasligi kerak (`X-Accel-Buffering: no` yuboriladi). SSE ishlamasa, avvalgi kabi oddiy so'rovlar zaxira bo'lib ishlaydi.
+
+## 💎 PRO va VIP (v49)
+- Kino/serial formasida endi ikki belgi: **👑 VIP** (avvalgi «PRO» belgisi — bazadagi barcha eski pullik kontent avtomatik VIP bo'ldi) va **💎 PRO** (alohida sotiladi, narx kiritiladi). Ikkalasi bir vaqtda bo'lmaydi. PRO ni VIP obuna ochmaydi; serialda narx butun serial uchun.
+- **Sozlamalar → 💳 To'lov kartalari**: kartani bir marta qo'shasiz; har bir PRO kontentda ro'yxatdan tanlaysiz (tanlanmasa — birinchi faol karta).
+- Ilova ichida to'lov: Click/Payme (`.env` da `PAYMENT_TOKEN_CLICK/PAYME` bo'lsa) yoki karta + chek rasmi. Click/Payme ulanmagan bo'lsa faqat karta ko'rinadi. Chek bosh va starshiy adminlarga (yoki `VIP_CHECK_CHANNEL` ga) ✅/❌ tugmalari bilan boradi.
+- Pullik rejim o'chiq bo'lsa (Sozlamalar → Pullik rejim) VIP ham, PRO ham tekin bo'lib qoladi.
+
+## 🎤 Ovozli suhbat (v50)
+- Shaxsiy xonalarda reaksiyalar yonida 🎤 (gapirish) va 🎧 (eshitish) tugmalari. Avto: mikrofon o'chiq, naushnik yoniq. To'liq ekranda ham bor.
+- Ovoz serverdan o'tmaydi: gapiruvchi har bir eshitayotganga to'g'ridan-to'g'ri (WebRTC) yuboradi, server faqat signal beradi — shuning uchun server yuklamasi deyarli yo'q.
+- Bir vaqtda 4 kishi gapira oladi; mute qilinganlar gapira olmaydi; chiqarilgan foydalanuvchi ovozdan ham chiqadi.
+- Ommaviy teatrda (yuzlab odam) ovozli suhbat yo'q — bu tizim kichik xonalar uchun.
+- Ba'zi tarmoqlarda (mobil operator NAT) to'g'ridan-to'g'ri ulanish bo'lmaydi: shunda `.env` ga `TURN_URLS`, `TURN_USER`, `TURN_PASS` qo'shing (o'z TURN serveringiz, masalan coturn).

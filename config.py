@@ -35,6 +35,10 @@ PAYMENT_TOKEN_PAYME: str = os.getenv("PAYMENT_TOKEN_PAYME", "").strip()
 # VIP cheklari tushadigan kanal/guruh ID si (masalan -1001234567890). Bot u yerda admin bo'lishi shart.
 # Bo'sh bo'lsa yoki yuborib bo'lmasa — cheklar eski usulda bosh/starshiy adminlarning lichkasiga boradi.
 VIP_CHECK_CHANNEL: int = int(os.getenv("VIP_CHECK_CHANNEL", "0").strip() or 0) if os.getenv("VIP_CHECK_CHANNEL", "0").strip().lstrip("-").isdigit() else 0
+# Teatr ovozli suhbati (WebRTC). STUN standart; ba'zi tarmoqlarda (mobil/korporativ NAT) TURN server kerak bo'ladi — ixtiyoriy.
+TURN_URLS: list = [u.strip() for u in os.getenv("TURN_URLS", "").split(",") if u.strip()]  # masalan: turn:turn.example.com:3478
+TURN_USER: str = os.getenv("TURN_USER", "").strip()
+TURN_PASS: str = os.getenv("TURN_PASS", "").strip()
 THEATRE_TZ: int = int(os.getenv("THEATRE_TZ", "5") or 5)  # vaqt zonasi (UTC+5 — O'zbekiston)
 BOT_TITLE: str = os.getenv("BOT_TITLE", "MEGA CINEMA").strip()
 PORT: int = int(os.getenv("PORT", "8080"))
