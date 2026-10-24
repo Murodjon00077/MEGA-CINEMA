@@ -114,9 +114,7 @@ async def locked(movie) -> bool:
 
 
 async def pro_info(movie) -> dict | None:
-    """PRO kontent bo'lsa: {t, id, price, card, title}; aks holda None (rejim o'chiq bo'lsa ham None)."""
-    if not ON:
-        return None
+    """PRO kontent bo'lsa: {t, id, price, card, title}; aks holda None. PRO «Pullik rejim» (VIP obuna) tugmasiga bog'liq emas."""
     if movie["series_id"]:
         ser = await db.get_series(movie["series_id"])
         if ser and ser["pro_price"] > 0:
@@ -129,8 +127,6 @@ async def pro_info(movie) -> dict | None:
 
 async def pro_info_of(t: str, item_id: int) -> dict | None:
     """Katalog kartochkasi (t='m' kino / t='s' qismli) bo'yicha PRO ma'lumoti."""
-    if not ON:
-        return None
     row = await (db.get_series(item_id) if t == "s" else db.get_movie(item_id))
     if not row or row["pro_price"] <= 0:
         return None
@@ -155,11 +151,11 @@ async def can_watch(uid: int, movie) -> bool:
 
 def pay_tag(r) -> str:
     """Katalog lentasi: 'pro' (alohida sotiladi) | 'vip' | 'free' | '' (rejim o'chiq bo'lsa lenta yo'q)."""
-    if not ON:
-        return ""
     keys = r.keys()
     if "pro_price" in keys and r["pro_price"]:
         return "pro"
+    if not ON:
+        return ""
     return "vip" if ("paid" in keys and r["paid"]) else "free"
 
 

@@ -432,7 +432,7 @@ async def api_series(request: web.Request):
     if not eps:
         raise web.HTTPNotFound(reason="not found")
     watched = await db.watched_episodes(user["id"], ser["id"])
-    pro_price = ser["pro_price"] if vip.ON else 0
+    pro_price = ser["pro_price"]
     owned = bool(pro_price) and (is_admin or await db.buy_has(user["id"], "s", ser["id"]))
     return web.json_response({
         "price": pro_price, "owned": owned,
@@ -444,7 +444,7 @@ async def api_series(request: web.Request):
         "language": ser["language"], "description": ser["description"], "quality": "",
         "views": sum(e["views"] for e in eps), "poster": bool(ser["poster_id"]),
         "cv": _cv(ser["cover_id"]),
-        "pay": ("pro" if pro_price else "vip" if ser["paid"] else "free") if vip.ON else "",
+        "pay": "pro" if pro_price else (("vip" if ser["paid"] else "free") if vip.ON else ""),
         "eps": [{"id": e["id"], "ep": e["ep"], "views": e["views"], "live": e["status"] == "live",
                  "pro": bool(pro_price and not owned) or bool(vip.ON and not pro_price and ser["paid"]
                                                               and (e["ep"] or 0) > (ser["free_eps"] or 0))} for e in eps],
