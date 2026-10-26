@@ -2346,6 +2346,12 @@ def make_app(bot) -> web.Application:
     r.add_get("/api/admin/cards/pick", api_admin_cards_pick)
     r.add_post("/api/admin/cards", api_admin_cards_save)
     r.add_post("/api/admin/cards/delete", api_admin_cards_delete)
+    # MEGA AI SECRETARY uchun faqat-o'qish ichki API (INTERNAL_API_TOKEN bo'lmasa o'chiq). Xato bo'lsa bot ishlashda davom etadi.
+    try:
+        import internal_api
+        internal_api.register(app)
+    except Exception:
+        logging.exception("internal_api ulanmadi")
     return app
 
 
